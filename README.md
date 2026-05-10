@@ -25,6 +25,20 @@ Documentation index
 - [`hw-map-reduce-rs`](hw-map-reduce-rs/README.md): HW 5 Rust MapReduce
   coordinator, worker registration, task distribution, and fault tolerance.
 
+Enhanced guides and validation reports
+--------------------------------------
+
+Additional English documentation lives in
+[`docs/cs162-homework-guides`](docs/cs162-homework-guides/README.md):
+
+- A generated companion guide that combines the per-homework READMEs into one
+  printable document.
+- A test-completeness audit that records what was attempted locally, what was
+  blocked by the Windows environment, what static evidence was found, and what
+  must be added before each homework can be considered well tested.
+- A PDF generation script for rebuilding the printable artifacts after the
+  README files change.
+
 Source alignment
 ----------------
 

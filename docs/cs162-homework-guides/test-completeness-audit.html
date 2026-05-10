@@ -1,0 +1,527 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CS 162 Homework Test Completeness Audit</title>
+  <style>
+    @page { margin: 0.72in; }
+    body {
+      color: #1f2937;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 11.5pt;
+      line-height: 1.48;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #111827;
+      font-size: 23pt;
+      line-height: 1.15;
+      margin: 28px 0 12px;
+      page-break-after: avoid;
+    }
+    h2 {
+      border-bottom: 1px solid #d1d5db;
+      color: #111827;
+      font-size: 16pt;
+      margin: 24px 0 10px;
+      padding-bottom: 4px;
+      page-break-after: avoid;
+    }
+    h3, h4 {
+      color: #111827;
+      margin: 18px 0 8px;
+      page-break-after: avoid;
+    }
+    p { margin: 7px 0; }
+    ul, ol { margin: 7px 0 12px 24px; padding: 0; }
+    li { margin: 3px 0; }
+    code {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-family: Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      padding: 1px 4px;
+    }
+    pre {
+      background: #111827;
+      border-radius: 6px;
+      color: #f9fafb;
+      overflow-wrap: anywhere;
+      padding: 11px 13px;
+      white-space: pre-wrap;
+    }
+    pre code {
+      background: transparent;
+      border: 0;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 12px 0;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #d1d5db;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    a { color: #0f766e; text-decoration: none; }
+  </style>
+</head>
+<body>
+<h1>CS 162 Homework Test Completeness Audit</h1>
+<p>Audit date: 2026-05-10</p>
+<h2>Scope</h2>
+<p>This report validates the homework documentation and the current testing state of this repository. It is based on the public CS 162 homework pages, the files in this repository, and the commands that could be attempted in the local Windows environment.</p>
+<p>Official sources used:</p>
+<ul>
+<li><a href="https://cs162.org/static/hw/hw-intro/">https://cs162.org/static/hw/hw-intro/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-list/">https://cs162.org/static/hw/hw-list/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-shell/">https://cs162.org/static/hw/hw-shell/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-http/">https://cs162.org/static/hw/hw-http/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-http-rs/">https://cs162.org/static/hw/hw-http-rs/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-memory/">https://cs162.org/static/hw/hw-memory/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-map-reduce/">https://cs162.org/static/hw/hw-map-reduce/</a></li>
+<li><a href="https://cs162.org/static/hw/hw-map-reduce-rs/">https://cs162.org/static/hw/hw-map-reduce-rs/</a></li>
+</ul>
+<h2>Environment validation</h2>
+<p>The local environment is useful for static review, but it is not sufficient for full CS 162 execution testing.</p>
+<p>Attempted commands:</p>
+<table>
+<tr>
+<th>Check</th>
+<th>Result</th>
+<th>Impact</th>
+</tr>
+<tr>
+<td><code>make --version</code></td>
+<td>Blocked: <code>make</code> is not installed</td>
+<td>C homework builds and Pintos tests cannot be executed locally.</td>
+</tr>
+<tr>
+<td><code>cargo --version</code></td>
+<td>Blocked: <code>cargo</code> is not installed</td>
+<td>Rust homework tests cannot be executed locally.</td>
+</tr>
+<tr>
+<td><code>bash -lc "uname -a"</code></td>
+<td>Blocked: WSL reports no installed Linux distribution</td>
+<td>Linux shell scripts and Unix signal tests cannot be executed locally.</td>
+</tr>
+<tr>
+<td>`rg -n "TODO</td>
+<td>todo!" ...`</td>
+<td>Passed</td>
+<td>Static implementation gaps were found and recorded below.</td>
+</tr>
+<tr>
+<td><code>rg -n "[\\p{Han}]" README.md hw-*/README.md</code></td>
+<td>Passed earlier</td>
+<td>Repository homework documentation is English-only.</td>
+</tr>
+<tr>
+<td><code>git diff --check</code></td>
+<td>Passed earlier</td>
+<td>Markdown files do not contain whitespace errors.</td>
+</tr>
+</table>
+<h2>Static evidence summary</h2>
+<p>The repository is not ready to be called fully tested. Static inspection found 53 <code>TODO</code> or <code>todo!</code> markers across homework code and documentation. The most important markers are implementation placeholders, not just comments.</p>
+<p>Observed implementation gap counts by homework:</p>
+<table>
+<tr>
+<th>Homework</th>
+<th>Static TODO markers</th>
+<th>Interpretation</th>
+</tr>
+<tr>
+<td><code>hw-intro</code></td>
+<td>0</td>
+<td>No obvious placeholder markers, but no automated tests were found.</td>
+</tr>
+<tr>
+<td><code>hw-list</code></td>
+<td>13</td>
+<td>List and pthread word-count code still has visible TODO markers.</td>
+</tr>
+<tr>
+<td><code>hw-shell</code></td>
+<td>0</td>
+<td>No TODO markers, but the test harness is only a smoke test.</td>
+</tr>
+<tr>
+<td><code>hw-http</code></td>
+<td>15</td>
+<td>The C HTTP server still has several part-level TODO markers.</td>
+</tr>
+<tr>
+<td><code>hw-http-rs</code></td>
+<td>6</td>
+<td>The Rust HTTP server still has <code>todo!</code> placeholders in core modules.</td>
+</tr>
+<tr>
+<td><code>hw-memory</code></td>
+<td>3</td>
+<td>The standalone allocator has unimplemented allocation functions.</td>
+</tr>
+<tr>
+<td><code>hw-map-reduce</code></td>
+<td>6</td>
+<td>The C coordinator has visible TODO markers.</td>
+</tr>
+<tr>
+<td><code>hw-map-reduce-rs</code></td>
+<td>10</td>
+<td>The Rust coordinator and ignored test still contain placeholders.</td>
+</tr>
+</table>
+<h2>Existing test inventory</h2>
+<table>
+<tr>
+<th>Homework</th>
+<th>Existing tests or harness</th>
+<th>Completeness verdict</th>
+</tr>
+<tr>
+<td><code>hw-intro</code></td>
+<td>No checked-in automated harness found</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td><code>hw-list</code></td>
+<td>No checked-in automated harness found</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td><code>hw-shell</code></td>
+<td><code>test.sh</code> checks one <code>pwd</code> case and one <code>/bin/ls</code> case</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td><code>hw-http</code></td>
+<td>No checked-in automated HTTP harness found</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td><code>hw-http-rs</code></td>
+<td>12 helper-level Rust tests in <code>src/tests</code></td>
+<td>Partial, not complete</td>
+</tr>
+<tr>
+<td><code>hw-memory</code></td>
+<td><code>mm_alloc/mm_test.c</code>; 26 active Pintos memory tests in <code>Make.tests</code></td>
+<td>Partial; Pintos side is strongest, standalone allocator is not complete</td>
+</tr>
+<tr>
+<td><code>hw-map-reduce</code></td>
+<td>No checked-in automated cluster harness found</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td><code>hw-map-reduce-rs</code></td>
+<td>One ignored <code>test_wc</code> containing <code>todo!("Pick an input file")</code></td>
+<td>Not complete</td>
+</tr>
+</table>
+<h2>Homework-by-homework validation</h2>
+<h3>HW 0: Intro</h3>
+<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README points to the correct official HW 0 page and counting-words task.</li>
+<li>The listed files match the repository structure.</li>
+<li>The missing-test prompts cover word totals, frequency output, stdin,</li>
+<p>multiple files, invalid flags, <code>limits</code>, and <code>map</code> output shape.</p>
+</ul>
+<p>Completeness verdict: not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Add a <code>words/tests/</code> fixture directory.</li>
+<li>Add golden-output tests for <code>./words -c</code> and <code>./words -f</code>.</li>
+<li>Add stdin and multi-file tests.</li>
+<li>Add shape checks for <code>limits</code> and <code>map</code>.</li>
+</ul>
+<p>Minimum command set to run in Linux or WSL:</p>
+<pre><code>cd hw-intro
+make
+./limits
+./map
+cd words
+make
+./words -c tests/basic.txt
+./words -f tests/basic.txt</code></pre>
+<h3>HW 1: Lists</h3>
+<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Static evidence:</p>
+<ul>
+<li><code>word_count_l.c</code>, <code>word_count_p.c</code>, and <code>pwords.c</code> still contain TODO</li>
+<p>markers.</p>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README maps the official list and <code>pwords</code> tasks to <code>list.c</code>,</li>
+<p><code>word_count_l.c</code>, <code>word_count_p.c</code>, and <code>pwords.c</code>.</p>
+<li>The recommended tests compare <code>words</code>, <code>lwords</code>, and <code>pwords</code>, which is the</li>
+<p>right local strategy for this homework.</p>
+</ul>
+<p>Completeness verdict: not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Add deterministic word-count fixtures.</li>
+<li>Compare <code>lwords</code> and <code>pwords</code> against the reference <code>words</code> binary.</li>
+<li>Add a repeated <code>pwords</code> race test.</li>
+<li>Add memory-check instructions with Valgrind or sanitizers.</li>
+</ul>
+<p>Minimum command set to run in Linux or WSL:</p>
+<pre><code>cd hw-list
+make
+./words tests/fixtures/single.txt &gt; /tmp/ref.out
+./lwords tests/fixtures/single.txt &gt; /tmp/lwords.out
+./pwords tests/fixtures/single.txt &gt; /tmp/pwords.out
+diff -u /tmp/ref.out /tmp/lwords.out
+diff -u /tmp/ref.out /tmp/pwords.out</code></pre>
+<h3>HW 2: Shell</h3>
+<p>Local execution status: blocked by missing <code>make</code> and unavailable WSL Linux environment.</p>
+<p>Static evidence:</p>
+<ul>
+<li><code>test.sh</code> exists and is readable.</li>
+<li>It currently checks only <code>pwd</code> and <code>/bin/ls</code>.</li>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README covers the official shell surfaces: directory commands,</li>
+<p>foreground execution, redirection, pipes, Ctrl-D, Ctrl-C, and Ctrl-Z.</p>
+<li>The missing-test prompts include both deterministic command tests and</li>
+<p>environment-sensitive signal tests.</p>
+</ul>
+<p>Completeness verdict: not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Expand <code>test.sh</code> into a table-driven harness.</li>
+<li>Add <code>cd</code>, invalid command, redirection, pipe, and tokenizer tests.</li>
+<li>Add Linux-only signal tests for Ctrl-C and Ctrl-Z behavior.</li>
+</ul>
+<p>Minimum command set to run in Linux or WSL:</p>
+<pre><code>cd hw-shell
+make
+bash test.sh
+printf "cd /\npwd\n" | ./shell
+printf "echo hello | wc -w\n" | ./shell</code></pre>
+<h3>HW 3: HTTP Server in C</h3>
+<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Static evidence:</p>
+<ul>
+<li><code>httpserver.c</code> contains part-level TODO markers for file serving, directory</li>
+<p>serving, proxying, and concurrency paths.</p>
+<li>No checked-in HTTP integration test script was found.</li>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README maps the official socket and HTTP tasks to <code>httpserver.c</code>,</li>
+<p><code>libhttp.c</code>, <code>wq.c</code>, and the server variants.</p>
+<li>The missing-test prompts require real socket tests, not just unit tests.</li>
+</ul>
+<p>Completeness verdict: not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Add <code>tests/http_smoke.sh</code>.</li>
+<li>Run it against <code>httpserver</code>, <code>forkserver</code>, <code>threadserver</code>, and <code>poolserver</code>.</li>
+<li>Add status, header, body, directory, traversal, malformed request, proxy, and</li>
+<p>concurrency checks.</p>
+</ul>
+<p>Minimum command set to run in Linux or WSL:</p>
+<pre><code>cd hw-http
+make
+./httpserver --files www --port 8000
+curl -i http://127.0.0.1:8000/
+curl -i http://127.0.0.1:8000/not-found</code></pre>
+<h3>HW 3: HTTP Server in Rust</h3>
+<p>Local execution status: blocked by missing <code>cargo</code>.</p>
+<p>Static evidence:</p>
+<ul>
+<li><code>src/http.rs</code>, <code>src/server.rs</code>, and <code>src/stats.rs</code> contain <code>todo!</code></li>
+<p>placeholders.</p>
+<li><code>src/tests</code> contains 12 helper-level tests.</li>
+<li>No integration test starts the real server and sends TCP requests.</li>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README correctly separates helper-level testing from socket-level</li>
+<p>integration testing.</p>
+<li>The missing-test prompts call for parser tests, real <code>GET</code> tests, directory</li>
+<p>tests, stats integration checks, and concurrent client coverage.</p>
+</ul>
+<p>Completeness verdict: partial, not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Keep current helper tests.</li>
+<li>Add <code>tests/server_integration.rs</code>.</li>
+<li>Add request parser coverage and real TCP client tests.</li>
+<li>Verify stats after real requests.</li>
+</ul>
+<p>Minimum command set to run in Linux, WSL, or a Rust environment:</p>
+<pre><code>cd hw-http-rs
+cargo test
+cargo test --test server_integration
+cargo run -- --files www --port 8000</code></pre>
+<h3>HW 4: Memory</h3>
+<p>Local execution status: blocked by missing <code>make</code> and unavailable Pintos Linux environment.</p>
+<p>Static evidence:</p>
+<ul>
+<li><code>mm_alloc/mm_alloc.c</code> contains TODO markers for malloc, realloc, and free.</li>
+<li><code>pintos/src/tests/memory/Make.tests</code> enables 26 active memory tests.</li>
+<li>Stack-growth tests are present but commented out.</li>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README correctly distinguishes the standalone allocator from the Pintos</li>
+<p>memory suite.</p>
+<li>It avoids claiming active <code>calloc</code> coverage where the current active memory</li>
+<p>test list does not show explicit <code>calloc</code> tests.</p>
+</ul>
+<p>Completeness verdict: partial, not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Expand standalone allocator tests for alignment, reuse, realloc growth and</li>
+<p>shrink, fragmentation, and stress.</p>
+<li>Run Pintos <code>make check</code> in the course environment.</li>
+<li>Decide whether stack-growth tests are required for the target assignment</li>
+<p>version before enabling them.</p>
+</ul>
+<p>Minimum command set to run in Linux or the course VM:</p>
+<pre><code>cd hw-memory/mm_alloc
+make
+./mm_test
+
+cd ../pintos/src/memory
+make
+make check</code></pre>
+<h3>HW 5: MapReduce in C</h3>
+<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Static evidence:</p>
+<ul>
+<li>The C coordinator contains TODO markers.</li>
+<li>No checked-in integration harness was found.</li>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README maps the official job-submission and cluster behavior to the RPC,</li>
+<p>coordinator, worker, client, and app directories.</p>
+<li>The missing-test prompts require a real cluster test with cleanup and golden</li>
+<p>output comparison.</p>
+</ul>
+<p>Completeness verdict: not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Add <code>tests/run_cluster_test.sh</code>.</li>
+<li>Start coordinator and workers automatically.</li>
+<li>Submit <code>wc</code>, <code>grep</code>, and <code>vertex_degree</code> jobs.</li>
+<li>Compare processed output against golden files.</li>
+<li>Add worker-failure retry coverage.</li>
+</ul>
+<p>Minimum command set to run in Linux or WSL:</p>
+<pre><code>cd hw-map-reduce
+make
+./bin/mr-coordinator
+./bin/mr-worker
+./bin/mr-client submit -a wc -o /tmp/hw-map-reduce-out -w data/gutenberg/p.txt
+./bin/mr-client process -a wc -o /tmp/hw-map-reduce-out</code></pre>
+<h3>HW 5: MapReduce in Rust</h3>
+<p>Local execution status: blocked by missing <code>cargo</code>.</p>
+<p>Static evidence:</p>
+<ul>
+<li><code>src/coordinator/mod.rs</code> still contains job-submission TODOs.</li>
+<li><code>src/tests/mod.rs::test_wc</code> is ignored and contains</li>
+<p><code>todo!("Pick an input file")</code>.</p>
+</ul>
+<p>Documentation correctness check:</p>
+<ul>
+<li>The README covers worker registration, job submission, task assignment,</li>
+<p>completion, heartbeat, retry, and end-to-end output validation.</p>
+<li>The missing-test prompts ask for both state-machine unit tests and async</li>
+<p>integration tests.</p>
+</ul>
+<p>Completeness verdict: not complete.</p>
+<p>Required next tests:</p>
+<ul>
+<li>Finish <code>test_wc</code> with a real fixture and expected output.</li>
+<li>Add worker-registration, job-submission, task-assignment, completion, and</li>
+<p>heartbeat/retry tests.</p>
+<li>Add <code>wc</code>, <code>grep</code>, and <code>vertex_degree</code> integration tests with timeouts.</li>
+</ul>
+<p>Minimum command set to run in Linux, WSL, or a Rust environment:</p>
+<pre><code>cd hw-map-reduce-rs
+cargo test
+cargo test test_wc -- --ignored</code></pre>
+<h2>Overall verdict</h2>
+<p>The homework documentation is now stronger than a plain official assignment page because it is tied directly to this repository and its current testing state. However, the assignments themselves are not fully tested yet.</p>
+<p>Readiness by homework:</p>
+<table>
+<tr>
+<th>Homework</th>
+<th>Documentation readiness</th>
+<th>Test completeness</th>
+</tr>
+<tr>
+<td>HW 0 Intro</td>
+<td>Good</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td>HW 1 Lists</td>
+<td>Good</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td>HW 2 Shell</td>
+<td>Good</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td>HW 3 HTTP C</td>
+<td>Good</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td>HW 3 HTTP Rust</td>
+<td>Good</td>
+<td>Partial, not complete</td>
+</tr>
+<tr>
+<td>HW 4 Memory</td>
+<td>Good</td>
+<td>Partial, not complete</td>
+</tr>
+<tr>
+<td>HW 5 MapReduce C</td>
+<td>Good</td>
+<td>Not complete</td>
+</tr>
+<tr>
+<td>HW 5 MapReduce Rust</td>
+<td>Good</td>
+<td>Not complete</td>
+</tr>
+</table>
+<h2>Definition of done for future work</h2>
+<p>Each homework should be considered well tested only after all of the following are true:</p>
+<ol>
+<li>The homework builds in the expected Linux, WSL, or course VM environment.</li>
+<li>The documented smoke commands pass.</li>
+<li>The repository contains deterministic automated tests for the main required</li>
+<p>behavior.</p>
+<li>Edge cases and failure modes listed in each README are covered.</li>
+<li>Long-running or environment-sensitive tests have timeouts.</li>
+<li>The test commands are documented and reproducible from a fresh checkout.</li>
+<li>Any skipped or ignored test is explained in the README or audit report.</li>
+</ol>
+</body>
+</html>
