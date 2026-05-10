@@ -31,13 +31,12 @@ Enhanced guides and validation reports
 Additional English documentation lives in
 [`docs/cs162-homework-guides`](docs/cs162-homework-guides/README.md):
 
-- A generated companion guide that combines the per-homework READMEs into one
-  printable document.
-- A test-completeness audit that records what was attempted locally, what was
-  blocked by the Windows environment, what static evidence was found, and what
-  must be added before each homework can be considered well tested.
-- A PDF generation script for rebuilding the printable artifacts after the
-  README files change.
+- `testing-guide.md`: how to design complete test cases for each homework.
+- `validation-report.md`: what was actually built and run locally after the
+  WSL toolchain was installed.
+
+These guides are Markdown-only. Generated PDFs, HTML exports, scratch test
+scripts, and scratch implementation changes are intentionally not tracked.
 
 Source alignment
 ----------------
@@ -58,11 +57,12 @@ Repository-wide test audit
 --------------------------
 
 This repository does not currently have complete local automated testing for
-every homework. The audit below describes the state of the repository, not the
-official course autograder. The local Windows environment used for this audit
-did not have `make`, `cargo`, or a configured WSL Linux distribution, so tests
-were not executed end-to-end here. Run the listed commands in Linux, WSL, or
-the CS 162 course environment.
+every homework. The report below describes the state of the repository, not the
+official course autograder. A disposable scratch copy was used to complete and
+test representative implementations without changing the tracked homework
+source code. See
+[`validation-report.md`](docs/cs162-homework-guides/validation-report.md) for
+the exact commands and results.
 
 Current coverage:
 

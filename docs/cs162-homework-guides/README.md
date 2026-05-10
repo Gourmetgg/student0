@@ -1,49 +1,36 @@
-CS 162 Homework Companion Documents
-===================================
+CS 162 Homework Lab Guides
+==========================
 
-This directory contains enhanced, repository-specific English documentation for
-the CS 162 homework assignments in this repository.
+This directory contains English-only, repository-specific lab guidance for the
+CS 162 homework assignments. The documents are original study and testing
+guides; they do not copy the public CS 162 pages verbatim.
 
-Artifacts
+Documents
 ---------
 
-- `cs162-homework-companion.md`: generated from the root README and every
-  `hw-*` README. It is the printable companion guide.
-- `test-completeness-audit.md`: a hand-written validation report that explains
-  what was checked in WSL, which commands passed or failed, and whether each
-  homework's testing is complete.
-- `build-pdfs.js`: a small Node script that rebuilds the companion guide,
-  renders Markdown to HTML, and asks Chrome or Edge to print PDFs when a
-  supported browser is available.
+- `testing-guide.md`: the main lab guide. It explains how to design test cases,
+  how to judge whether a homework is tested completely enough, and which tests
+  should exist for each homework.
+- `validation-report.md`: the latest local validation report. It records what
+  was actually built and run in WSL, including tests run in a disposable
+  scratch copy so that this repository's source code remains unchanged.
 
-Generated PDF files, when present:
+Repository policy
+-----------------
 
-- `cs162-homework-companion.pdf`
-- `test-completeness-audit.pdf`
+The tracked homework source code should remain the original student code unless
+an implementation change is explicitly requested. This directory is for lab
+documentation only. Generated PDFs, HTML files, and local scratch test scripts
+are intentionally not kept here.
 
-Why these documents are better than a plain copy of the official pages
-----------------------------------------------------------------------
+Official sources used
+---------------------
 
-These files do not duplicate the CS 162 website verbatim. They are original,
-repo-specific guides that add:
-
-- Direct mapping from official CS 162 tasks to this repository's files.
-- Local build and run commands.
-- Current test inventory.
-- Evidence-based completeness verdicts.
-- Detailed missing-test prompts that can be converted into scripts, Rust tests,
-  C harnesses, or Pintos `.ck` tests.
-- Environment notes for Windows, WSL, Linux, and the CS 162 VM.
-
-Regenerate PDFs
----------------
-
-From the repository root:
-
-```sh
-node docs/cs162-homework-guides/build-pdfs.js
-```
-
-The script requires Node. When Chrome or Edge PDF printing is not available,
-it still writes the generated Markdown, HTML, and a simple text-based PDF
-fallback.
+- <https://cs162.org/static/hw/hw-intro/>
+- <https://cs162.org/static/hw/hw-list/>
+- <https://cs162.org/static/hw/hw-shell/>
+- <https://cs162.org/static/hw/hw-http/>
+- <https://cs162.org/static/hw/hw-http-rs/>
+- <https://cs162.org/static/hw/hw-memory/>
+- <https://cs162.org/static/hw/hw-map-reduce/>
+- <https://cs162.org/static/hw/hw-map-reduce-rs/>
