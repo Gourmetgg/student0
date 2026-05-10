@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R] /Count 8 >>
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R] /Count 10 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Length 2588 >>
+<< /Length 2654 >>
 stream
 BT
 /F1 9 Tf
@@ -30,8 +30,7 @@ BT
 () Tj T*
 (This report validates the homework documentation and the current testing state) Tj T*
 (of this repository. It is based on the public CS 162 homework pages, the files) Tj T*
-(in this repository, and the commands that could be attempted in the local) Tj T*
-(Windows environment.) Tj T*
+(in this repository, and a WSL Ubuntu execution pass from the repository root.) Tj T*
 () Tj T*
 (Official sources used:) Tj T*
 () Tj T*
@@ -47,24 +46,66 @@ BT
 (Environment validation) Tj T*
 (----------------------) Tj T*
 () Tj T*
-(The local environment is useful for static review, but it is not sufficient for) Tj T*
-(full CS 162 execution testing.) Tj T*
+(WSL Ubuntu is available and can execute the C and Pintos portions of the) Tj T*
+(repository. Rust homework testing is still blocked because Cargo is not) Tj T*
+(installed in the WSL image.) Tj T*
 () Tj T*
 (Attempted commands:) Tj T*
 () Tj T*
 (| Check | Result | Impact |) Tj T*
 (| --- | --- | --- |) Tj T*
-(| make --version | Blocked: make is not installed | C homework builds and Pintos tests) Tj T*
-(cannot be executed locally. |) Tj T*
-(| cargo --version | Blocked: cargo is not installed | Rust homework tests cannot be executed) Tj T*
-(locally. |) Tj T*
-(| bash -lc "uname -a" | Blocked: WSL reports no installed Linux distribution | Linux shell) Tj T*
-(scripts and Unix signal tests cannot be executed locally. |) Tj T*
+(| wsl -d Ubuntu -- bash -lc "uname -a" | Passed | WSL Ubuntu can be used for Linux-based) Tj T*
+(validation. |) Tj T*
+(| command -v make | Passed: /usr/bin/make | C homework builds can be attempted. |) Tj T*
+(| command -v gcc | Passed: /usr/local/bin/gcc | C homework builds can be attempted. |) Tj T*
+(| cargo --version | Failed: cargo: command not found | Rust homework builds and tests cannot) Tj T*
+(run until Rust is installed. |) Tj T*
+(| command -v qemu-system-i386 | Passed: /usr/bin/qemu-system-i386 | Pintos can run once its) Tj T*
+(bundled pintos script is placed on PATH. |) Tj T*
 (| rg -n "TODO|todo!" ... | Passed | Static implementation gaps were found and recorded) Tj T*
 (below. |) Tj T*
-(| rg -n "[\\\\p{Han}]" README.md hw-*/README.md | Passed earlier | Repository homework) Tj T*
-(documentation is English-only. |) Tj T*
-(| git diff --check | Passed earlier | Markdown files do not contain whitespace errors. |) Tj T*
+(| rg -n "[\\\\p{Han}]" README.md hw-*/README.md docs/cs162-homework-guides | Passed |) Tj T*
+(Repository homework documentation is English-only. |) Tj T*
+(| git diff --check | Passed | Markdown files do not contain whitespace errors. |) Tj T*
+() Tj T*
+(Execution evidence summary) Tj T*
+(--------------------------) Tj T*
+() Tj T*
+(| Homework | Command evidence | Runtime verdict |) Tj T*
+(| --- | --- | --- |) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3802 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+48 744 Td
+(| hw-intro | Top-level make builds map and limits; hw-intro/words make fails with) Tj T*
+(-Werror=unused-but-set-variable for main.c:97 \(infile\). | Partially builds; word-count tests) Tj T*
+(cannot run. |) Tj T*
+(| hw-list | make succeeds; ./pthread 2 runs as a smoke test. | Builds, but correctness is) Tj T*
+(not proven. |) Tj T*
+(| hw-shell | make succeeds; bash test.sh fails because the script has CRLF line endings; a) Tj T*
+(CRLF-normalized run still fails because pwd returns This shell doesn't know how to run) Tj T*
+(programs. | Builds, but shell behavior fails the existing smoke test. |) Tj T*
+(| hw-http | make succeeds with warnings; a live httpserver --files www --port ... smoke test) Tj T*
+(logs repeated Error accepting socket: Invalid argument, and curl cannot connect. | Builds,) Tj T*
+(but the server fails a real socket smoke test. |) Tj T*
+(| hw-http-rs | cargo --version fails. | Not runnable in the current WSL image. |) Tj T*
+(| hw-memory/mm_alloc | make fails under -Werror because mm_malloc, mm_realloc, and mm_free) Tj T*
+(parameters are unused. | Standalone allocator does not compile. |) Tj T*
+(| hw-memory/pintos/src/memory | make succeeds; make check fails without pintos on PATH; with) Tj T*
+(PATH=../../utils:../utils:..., the active Pintos memory suite produced 26 result files: 1) Tj T*
+(pass and 25 failures. | Pintos builds, but memory tests are overwhelmingly failing. |) Tj T*
+(| hw-map-reduce | make fails at worker/../rpc/rpc.h:9:10: fatal error: rpc/rpc.h: No such) Tj T*
+(file or directory. | C MapReduce does not compile in this WSL image. |) Tj T*
+(| hw-map-reduce-rs | cargo --version fails. | Not runnable in the current WSL image. |) Tj T*
 () Tj T*
 (Static evidence summary) Tj T*
 (-----------------------) Tj T*
@@ -73,30 +114,22 @@ BT
 (53 TODO or todo! markers across homework code and documentation. The most) Tj T*
 (important markers are implementation placeholders, not just comments.) Tj T*
 () Tj T*
-ET
-endstream
-endobj
-5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
-endobj
-6 0 obj
-<< /Length 2834 >>
-stream
-BT
-/F1 9 Tf
-12 TL
-48 744 Td
 (Observed implementation gap counts by homework:) Tj T*
 () Tj T*
 (| Homework | Static TODO markers | Interpretation |) Tj T*
 (| --- | ---: | --- |) Tj T*
-(| hw-intro | 0 | No obvious placeholder markers, but no automated tests were found. |) Tj T*
+(| hw-intro | 0 | No obvious placeholder markers, but words currently fails to compile under) Tj T*
+(the provided flags. |) Tj T*
 (| hw-list | 13 | List and pthread word-count code still has visible TODO markers. |) Tj T*
-(| hw-shell | 0 | No TODO markers, but the test harness is only a smoke test. |) Tj T*
-(| hw-http | 15 | The C HTTP server still has several part-level TODO markers. |) Tj T*
+(| hw-shell | 0 | No TODO markers, but behavior is not implemented enough to pass the) Tj T*
+(checked-in smoke test. |) Tj T*
+(| hw-http | 15 | The C HTTP server still has several part-level TODO markers and fails a) Tj T*
+(socket smoke test. |) Tj T*
 (| hw-http-rs | 6 | The Rust HTTP server still has todo! placeholders in core modules. |) Tj T*
-(| hw-memory | 3 | The standalone allocator has unimplemented allocation functions. |) Tj T*
-(| hw-map-reduce | 6 | The C coordinator has visible TODO markers. |) Tj T*
+(| hw-memory | 3 | The standalone allocator has unimplemented allocation functions; the) Tj T*
+(Pintos memory suite largely fails. |) Tj T*
+(| hw-map-reduce | 6 | The C coordinator has visible TODO markers and the project does not) Tj T*
+(compile in WSL without RPC header fixes. |) Tj T*
 (| hw-map-reduce-rs | 10 | The Rust coordinator and ignored test still contain placeholders.) Tj T*
 (|) Tj T*
 () Tj T*
@@ -107,11 +140,26 @@ BT
 (| --- | --- | --- |) Tj T*
 (| hw-intro | No checked-in automated harness found | Not complete |) Tj T*
 (| hw-list | No checked-in automated harness found | Not complete |) Tj T*
-(| hw-shell | test.sh checks one pwd case and one /bin/ls case | Not complete |) Tj T*
+(| hw-shell | test.sh checks one pwd case and one /bin/ls case, but currently fails | Not) Tj T*
+(complete |) Tj T*
 (| hw-http | No checked-in automated HTTP harness found | Not complete |) Tj T*
 (| hw-http-rs | 12 helper-level Rust tests in src/tests | Partial, not complete |) Tj T*
-(| hw-memory | mm_alloc/mm_test.c; 26 active Pintos memory tests in Make.tests | Partial;) Tj T*
-(Pintos side is strongest, standalone allocator is not complete |) Tj T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2406 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+48 744 Td
+(| hw-memory | mm_alloc/mm_test.c; 26 active Pintos memory tests in Make.tests; 36 memory .ck) Tj T*
+(files total including the commented-out stack-growth group | Partial; available tests reveal) Tj T*
+(major failures |) Tj T*
 (| hw-map-reduce | No checked-in automated cluster harness found | Not complete |) Tj T*
 (| hw-map-reduce-rs | One ignored test_wc containing todo!\("Pick an input file"\) | Not) Tj T*
 (complete |) Tj T*
@@ -121,7 +169,11 @@ BT
 () Tj T*
 (HW 0: Intro) Tj T*
 () Tj T*
-(Local execution status: blocked by missing make.) Tj T*
+(Observed WSL result:) Tj T*
+() Tj T*
+(- cd hw-intro && make built map and limits.) Tj T*
+(- cd hw-intro/words && make failed because main.c:97 defines infile,) Tj T*
+(sets it, and never uses it while -Werror is enabled.) Tj T*
 () Tj T*
 (Documentation correctness check:) Tj T*
 () Tj T*
@@ -132,42 +184,56 @@ BT
 () Tj T*
 (Completeness verdict: not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+(Required implementation fix before tests can run:) Tj T*
 () Tj T*
-(- Add a words/tests/ fixture directory.) Tj T*
-(- Add golden-output tests for ./words -c and ./words -f.) Tj T*
-(- Add stdin and multi-file tests.) Tj T*
-(- Add shape checks for limits and map.) Tj T*
+(- Either use infile in the intended input-file path or remove the unused) Tj T*
+(variable without changing the required command behavior.) Tj T*
 () Tj T*
-(Minimum command set to run in Linux or WSL:) Tj T*
+(Missing tests to add:) Tj T*
+() Tj T*
+(- Add words/tests/fixtures/basic.txt with repeated words and punctuation.) Tj T*
+(- Add a golden-output test for ./words -c tests/fixtures/basic.txt.) Tj T*
+(- Add a golden-output test for ./words -f tests/fixtures/basic.txt.) Tj T*
+(- Add stdin coverage with printf "one two one\\n" | ./words -f.) Tj T*
+(- Add multi-file coverage that verifies counts are combined correctly.) Tj T*
+(- Add invalid-flag and missing-file tests that assert nonzero exit status and a) Tj T*
+(useful diagnostic.) Tj T*
+(- Add smoke checks for ./limits and ./map so their output format is stable.) Tj T*
+() Tj T*
+(Minimum command set to run in Linux or WSL after the compile fix:) Tj T*
 () Tj T*
 () Tj T*
 (cd hw-intro) Tj T*
 (make) Tj T*
+(./limits) Tj T*
+(./map) Tj T*
+(cd words) Tj T*
+(make) Tj T*
+(./words -c tests/fixtures/basic.txt) Tj T*
+(./words -f tests/fixtures/basic.txt) Tj T*
+() Tj T*
+() Tj T*
+(HW 1: Lists) Tj T*
+() Tj T*
 ET
 endstream
 endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
 endobj
-8 0 obj
-<< /Length 1848 >>
+10 0 obj
+<< /Length 2327 >>
 stream
 BT
 /F1 9 Tf
 12 TL
 48 744 Td
-(./limits) Tj T*
-(./map) Tj T*
-(cd words) Tj T*
-(make) Tj T*
-(./words -c tests/basic.txt) Tj T*
-(./words -f tests/basic.txt) Tj T*
+(Observed WSL result:) Tj T*
 () Tj T*
-() Tj T*
-(HW 1: Lists) Tj T*
-() Tj T*
-(Local execution status: blocked by missing make.) Tj T*
+(- cd hw-list && make succeeded.) Tj T*
+(- ./pthread 2 ran, which only proves that one pthread smoke path starts.) Tj T*
+(- The smoke output alone does not prove that list.c, lwords, or pwords) Tj T*
+(are correct.) Tj T*
 () Tj T*
 (Static evidence:) Tj T*
 () Tj T*
@@ -183,12 +249,17 @@ BT
 () Tj T*
 (Completeness verdict: not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+(Missing tests to add:) Tj T*
 () Tj T*
-(- Add deterministic word-count fixtures.) Tj T*
-(- Compare lwords and pwords against the reference words binary.) Tj T*
-(- Add a repeated pwords race test.) Tj T*
-(- Add memory-check instructions with Valgrind or sanitizers.) Tj T*
+(- Add deterministic word-count fixtures for empty input, one word, repeated) Tj T*
+(words, mixed case, punctuation, and multiple files.) Tj T*
+(- Compare lwords and pwords output against the reference words binary.) Tj T*
+(- Add a repeated race test that runs pwords at least 50 times on the same) Tj T*
+(fixture and diffs every result against the reference output.) Tj T*
+(- Add a large-input test to exercise list insertion, lookup, sorting, and) Tj T*
+(concurrent updates.) Tj T*
+(- Add sanitizer or Valgrind instructions for list memory ownership and thread) Tj T*
+(lifetime bugs.) Tj T*
 () Tj T*
 (Minimum command set to run in Linux or WSL:) Tj T*
 () Tj T*
@@ -204,41 +275,55 @@ BT
 () Tj T*
 (HW 2: Shell) Tj T*
 () Tj T*
-(Local execution status: blocked by missing make and unavailable WSL Linux) Tj T*
-(environment.) Tj T*
+(Observed WSL result:) Tj T*
 () Tj T*
-(Static evidence:) Tj T*
-() Tj T*
-(- test.sh exists and is readable.) Tj T*
-(- It currently checks only pwd and /bin/ls.) Tj T*
+(- cd hw-shell && make succeeded.) Tj T*
+(- bash test.sh failed first because the script has Windows CRLF endings.) Tj T*
+(- Running a CRLF-normalized version still failed the built-in pwd check.) Tj T*
+(- Manual probes such as printf "pwd\\n" | ./shell and) Tj T*
+(printf "/bin/echo hello\\n" | ./shell returned) Tj T*
+(This shell doesn't know how to run programs.) Tj T*
 () Tj T*
 (Documentation correctness check:) Tj T*
 () Tj T*
-(- The README covers the official shell surfaces: directory commands,) Tj T*
 ET
 endstream
 endobj
-9 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
 endobj
-10 0 obj
-<< /Length 2005 >>
+12 0 obj
+<< /Length 2463 >>
 stream
 BT
 /F1 9 Tf
 12 TL
 48 744 Td
+(- The README covers the official shell surfaces: directory commands,) Tj T*
 (foreground execution, redirection, pipes, Ctrl-D, Ctrl-C, and Ctrl-Z.) Tj T*
 (- The missing-test prompts include both deterministic command tests and) Tj T*
 (environment-sensitive signal tests.) Tj T*
 () Tj T*
 (Completeness verdict: not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+(Required implementation and harness fixes before broader testing:) Tj T*
 () Tj T*
-(- Expand test.sh into a table-driven harness.) Tj T*
-(- Add cd, invalid command, redirection, pipe, and tokenizer tests.) Tj T*
-(- Add Linux-only signal tests for Ctrl-C and Ctrl-Z behavior.) Tj T*
+(- Convert test.sh to LF line endings or make the runner normalize line) Tj T*
+(endings before execution.) Tj T*
+(- Implement built-ins and program execution enough for pwd, cd, and) Tj T*
+(/bin/echo or /bin/ls to behave correctly.) Tj T*
+() Tj T*
+(Missing tests to add:) Tj T*
+() Tj T*
+(- Add table-driven tests for pwd, cd /, cd .., cd with no argument, and) Tj T*
+(invalid cd targets.) Tj T*
+(- Add foreground execution tests for /bin/echo, /bin/true, /bin/false,) Tj T*
+(and an invalid command.) Tj T*
+(- Add output-redirection tests that verify file content and overwrite behavior.) Tj T*
+(- Add pipe tests for echo hello | wc -w and a multi-stage pipeline.) Tj T*
+(- Add Ctrl-D behavior tests using stdin closure.) Tj T*
+(- Add Linux-only Ctrl-C and Ctrl-Z tests using a pseudo-terminal harness, with) Tj T*
+(explicit timeouts.) Tj T*
 () Tj T*
 (Minimum command set to run in Linux or WSL:) Tj T*
 () Tj T*
@@ -252,7 +337,13 @@ BT
 () Tj T*
 (HW 3: HTTP Server in C) Tj T*
 () Tj T*
-(Local execution status: blocked by missing make.) Tj T*
+(Observed WSL result:) Tj T*
+() Tj T*
+(- cd hw-http && make succeeded with warnings.) Tj T*
+(- A live server smoke test using ./httpserver --files www --port 18085 failed.) Tj T*
+(- The server log repeatedly printed Error accepting socket: Invalid argument.) Tj T*
+(- curl --noproxy 127.0.0.1 -i --max-time 3 http://127.0.0.1:18085/) Tj T*
+(could not connect.) Tj T*
 () Tj T*
 (Static evidence:) Tj T*
 () Tj T*
@@ -266,41 +357,60 @@ BT
 (libhttp.c, wq.c, and the server variants.) Tj T*
 (- The missing-test prompts require real socket tests, not just unit tests.) Tj T*
 () Tj T*
-(Completeness verdict: not complete.) Tj T*
-() Tj T*
-(Required next tests:) Tj T*
-() Tj T*
-(- Add tests/http_smoke.sh.) Tj T*
-(- Run it against httpserver, forkserver, threadserver, and poolserver.) Tj T*
-(- Add status, header, body, directory, traversal, malformed request, proxy, and) Tj T*
-(concurrency checks.) Tj T*
-() Tj T*
-(Minimum command set to run in Linux or WSL:) Tj T*
-() Tj T*
-() Tj T*
-(cd hw-http) Tj T*
-(make) Tj T*
-(./httpserver --files www --port 8000) Tj T*
-(curl -i http://127.0.0.1:8000/) Tj T*
-(curl -i http://127.0.0.1:8000/not-found) Tj T*
-() Tj T*
-() Tj T*
-(HW 3: HTTP Server in Rust) Tj T*
 ET
 endstream
 endobj
-11 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
 endobj
-12 0 obj
-<< /Length 2131 >>
+14 0 obj
+<< /Length 2405 >>
 stream
 BT
 /F1 9 Tf
 12 TL
 48 744 Td
+(Completeness verdict: not complete.) Tj T*
 () Tj T*
-(Local execution status: blocked by missing cargo.) Tj T*
+(Required implementation fix before deeper tests:) Tj T*
+() Tj T*
+(- Fix the accept loop so the server can accept a local TCP client without) Tj T*
+(logging Invalid argument.) Tj T*
+(- Address compile warnings in paths that should return a value or use required) Tj T*
+(parameters.) Tj T*
+() Tj T*
+(Missing tests to add:) Tj T*
+() Tj T*
+(- Add tests/http_smoke.sh that starts a server on a random available port,) Tj T*
+(waits for readiness, sends requests, and always kills the server on exit.) Tj T*
+(- Run the same smoke harness against httpserver, forkserver,) Tj T*
+(threadserver, and poolserver.) Tj T*
+(- Add 200, 404, and malformed-request tests.) Tj T*
+(- Add header tests for Content-Length, connection behavior, and MIME type) Tj T*
+(where required.) Tj T*
+(- Add directory listing and index.html tests if those are part of the target) Tj T*
+(assignment version.) Tj T*
+(- Add path traversal tests such as GET /../secret.) Tj T*
+(- Add proxy tests with a small local upstream server.) Tj T*
+(- Add concurrency tests that issue many simultaneous requests and compare every) Tj T*
+(response body.) Tj T*
+() Tj T*
+(Minimum command set to run in Linux or WSL after the accept fix:) Tj T*
+() Tj T*
+() Tj T*
+(cd hw-http) Tj T*
+(make) Tj T*
+(./httpserver --files www --port 8000) Tj T*
+(curl --noproxy 127.0.0.1 -i http://127.0.0.1:8000/) Tj T*
+(curl --noproxy 127.0.0.1 -i http://127.0.0.1:8000/not-found) Tj T*
+() Tj T*
+() Tj T*
+(HW 3: HTTP Server in Rust) Tj T*
+() Tj T*
+(Observed WSL result:) Tj T*
+() Tj T*
+(- cargo --version failed with cargo: command not found.) Tj T*
+(- Rust build and test commands were not runnable in the current WSL image.) Tj T*
 () Tj T*
 (Static evidence:) Tj T*
 () Tj T*
@@ -318,12 +428,34 @@ BT
 () Tj T*
 (Completeness verdict: partial, not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 2602 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+48 744 Td
+(Required environment fix before testing:) Tj T*
 () Tj T*
-(- Keep current helper tests.) Tj T*
-(- Add tests/server_integration.rs.) Tj T*
-(- Add request parser coverage and real TCP client tests.) Tj T*
-(- Verify stats after real requests.) Tj T*
+(- Install Rust and Cargo in WSL, then run the command set below.) Tj T*
+() Tj T*
+(Missing tests to add:) Tj T*
+() Tj T*
+(- Keep the current helper tests.) Tj T*
+(- Add request parser tests for valid requests, bad methods, bad paths, missing) Tj T*
+(headers, partial reads, and malformed bytes.) Tj T*
+(- Add tests/server_integration.rs that starts the server on an ephemeral port) Tj T*
+(and sends real TCP requests.) Tj T*
+(- Add file-serving tests for success, not found, directory handling, and path) Tj T*
+(traversal.) Tj T*
+(- Add stats tests that make real requests and verify the stats endpoint.) Tj T*
+(- Add concurrent-client tests with timeouts.) Tj T*
 () Tj T*
 (Minimum command set to run in Linux, WSL, or a Rust environment:) Tj T*
 () Tj T*
@@ -336,14 +468,24 @@ BT
 () Tj T*
 (HW 4: Memory) Tj T*
 () Tj T*
-(Local execution status: blocked by missing make and unavailable Pintos Linux) Tj T*
-(environment.) Tj T*
+(Observed WSL result:) Tj T*
+() Tj T*
+(- cd hw-memory/mm_alloc && make failed because mm_malloc, mm_realloc,) Tj T*
+(and mm_free leave parameters unused under -Werror.) Tj T*
+(- cd hw-memory/pintos/src/memory && make succeeded.) Tj T*
+(- make check first failed because pintos was not on PATH.) Tj T*
+(- With PATH=../../utils:../utils:..., the active Pintos memory suite produced) Tj T*
+(26 result files before manual cleanup of the long-running command.) Tj T*
+(- Only malloc-null passed. The other 25 active results failed, including) Tj T*
+(sbrk-small, sbrk-zero, sbrk-many, malloc-simple, malloc-free,) Tj T*
+(malloc-fit, malloc-fail, malloc-merge-*, and realloc-*.) Tj T*
 () Tj T*
 (Static evidence:) Tj T*
 () Tj T*
 (- mm_alloc/mm_alloc.c contains TODO markers for malloc, realloc, and free.) Tj T*
 (- pintos/src/tests/memory/Make.tests enables 26 active memory tests.) Tj T*
-(- Stack-growth tests are present but commented out.) Tj T*
+(- The directory contains 36 memory .ck files total; the stack-growth group is) Tj T*
+(present but commented out for this assignment version.) Tj T*
 () Tj T*
 (Documentation correctness check:) Tj T*
 () Tj T*
@@ -354,24 +496,38 @@ BT
 () Tj T*
 (Completeness verdict: partial, not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+(Required implementation and environment fixes before full validation:) Tj T*
 () Tj T*
-(- Expand standalone allocator tests for alignment, reuse, realloc growth and) Tj T*
+(- Implement mm_malloc, mm_realloc, and mm_free enough for mm_alloc to) Tj T*
 ET
 endstream
 endobj
-13 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
 endobj
-14 0 obj
-<< /Length 1852 >>
+18 0 obj
+<< /Length 2350 >>
 stream
 BT
 /F1 9 Tf
 12 TL
 48 744 Td
-(shrink, fragmentation, and stress.) Tj T*
-(- Run Pintos make check in the course environment.) Tj T*
+(compile.) Tj T*
+(- Run Pintos checks with the bundled utilities on PATH.) Tj T*
+(- Investigate the sbrk failures first; many allocator tests fail because the) Tj T*
+(user heap contract is not working.) Tj T*
+() Tj T*
+(Missing tests to add:) Tj T*
+() Tj T*
+(- Expand standalone allocator tests for alignment, zero-size allocation,) Tj T*
+(allocation reuse, splitting, coalescing, realloc growth, realloc shrink,) Tj T*
+(realloc-to-null behavior, free-null behavior, double-free policy, and) Tj T*
+(fragmentation stress.) Tj T*
+(- Add a deterministic standalone stress test that allocates and frees many) Tj T*
+(differently sized blocks.) Tj T*
+(- Add a test that writes through every allocated byte to catch invalid returned) Tj T*
+(pointers.) Tj T*
+(- Add a documented Pintos command that includes the required PATH setup.) Tj T*
 (- Decide whether stack-growth tests are required for the target assignment) Tj T*
 (version before enabling them.) Tj T*
 () Tj T*
@@ -384,12 +540,17 @@ BT
 () Tj T*
 (cd ../pintos/src/memory) Tj T*
 (make) Tj T*
+(env PATH=../../utils:../utils:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin) Tj T*
 (make check) Tj T*
 () Tj T*
 () Tj T*
 (HW 5: MapReduce in C) Tj T*
 () Tj T*
-(Local execution status: blocked by missing make.) Tj T*
+(Observed WSL result:) Tj T*
+() Tj T*
+(- cd hw-map-reduce && make failed while compiling worker/worker.o.) Tj T*
+(- The immediate error was) Tj T*
+(worker/../rpc/rpc.h:9:10: fatal error: rpc/rpc.h: No such file or directory.) Tj T*
 () Tj T*
 (Static evidence:) Tj T*
 () Tj T*
@@ -405,15 +566,37 @@ BT
 () Tj T*
 (Completeness verdict: not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+(Required environment or build fix before tests can run:) Tj T*
 () Tj T*
-(- Add tests/run_cluster_test.sh.) Tj T*
-(- Start coordinator and workers automatically.) Tj T*
-(- Submit wc, grep, and vertex_degree jobs.) Tj T*
-(- Compare processed output against golden files.) Tj T*
-(- Add worker-failure retry coverage.) Tj T*
+(- Install the required SunRPC/TIRPC development headers in WSL, or adjust the) Tj T*
+(include path and Makefile so rpc/rpc.h resolves consistently.) Tj T*
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 2405 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+48 744 Td
 () Tj T*
-(Minimum command set to run in Linux or WSL:) Tj T*
+(Missing tests to add:) Tj T*
+() Tj T*
+(- Add tests/run_cluster_test.sh that starts the coordinator and workers,) Tj T*
+(submits a job, processes output, validates output, and kills all child) Tj T*
+(processes on exit.) Tj T*
+(- Add wc, grep, and vertex_degree golden-output fixtures.) Tj T*
+(- Add a no-input or empty-input job test.) Tj T*
+(- Add repeated job-submission tests to verify job IDs and output directories.) Tj T*
+(- Add worker-failure retry coverage by killing a worker mid-task.) Tj T*
+(- Add timeout handling so a hung coordinator or worker fails the test instead) Tj T*
+(of blocking forever.) Tj T*
+() Tj T*
+(Minimum command set to run in Linux or WSL after RPC headers are fixed:) Tj T*
 () Tj T*
 () Tj T*
 (cd hw-map-reduce) Tj T*
@@ -426,21 +609,11 @@ BT
 () Tj T*
 (HW 5: MapReduce in Rust) Tj T*
 () Tj T*
-(Local execution status: blocked by missing cargo.) Tj T*
+(Observed WSL result:) Tj T*
 () Tj T*
-ET
-endstream
-endobj
-15 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
-endobj
-16 0 obj
-<< /Length 2312 >>
-stream
-BT
-/F1 9 Tf
-12 TL
-48 744 Td
+(- cargo --version failed with cargo: command not found.) Tj T*
+(- Rust build and test commands were not runnable in the current WSL image.) Tj T*
+() Tj T*
 (Static evidence:) Tj T*
 () Tj T*
 (- src/coordinator/mod.rs still contains job-submission TODOs.) Tj T*
@@ -456,12 +629,36 @@ BT
 () Tj T*
 (Completeness verdict: not complete.) Tj T*
 () Tj T*
-(Required next tests:) Tj T*
+(Required environment fix before testing:) Tj T*
+() Tj T*
+(- Install Rust and Cargo in WSL, then run the command set below.) Tj T*
+() Tj T*
+(Missing tests to add:) Tj T*
 () Tj T*
 (- Finish test_wc with a real fixture and expected output.) Tj T*
-(- Add worker-registration, job-submission, task-assignment, completion, and) Tj T*
-(heartbeat/retry tests.) Tj T*
-(- Add wc, grep, and vertex_degree integration tests with timeouts.) Tj T*
+(- Add worker-registration tests for unique worker IDs and duplicate) Tj T*
+(registrations.) Tj T*
+(- Add job-submission tests for valid apps, invalid apps, missing input files,) Tj T*
+(and output-directory collisions.) Tj T*
+(- Add task-assignment tests for map tasks, reduce tasks, and no-work responses.) Tj T*
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 2656 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+48 744 Td
+(- Add completion tests for successful tasks, failed tasks, duplicate) Tj T*
+(completions, and stale worker reports.) Tj T*
+(- Add heartbeat and retry tests with controlled timeouts.) Tj T*
+(- Add wc, grep, and vertex_degree async integration tests that start the) Tj T*
+(coordinator and workers and compare final outputs to golden files.) Tj T*
 () Tj T*
 (Minimum command set to run in Linux, WSL, or a Rust environment:) Tj T*
 () Tj T*
@@ -476,20 +673,23 @@ BT
 () Tj T*
 (The homework documentation is now stronger than a plain official assignment) Tj T*
 (page because it is tied directly to this repository and its current testing) Tj T*
-(state. However, the assignments themselves are not fully tested yet.) Tj T*
+(state. The WSL validation pass also shows that the assignments themselves are) Tj T*
+(not fully tested and, in several cases, are not yet passing basic build or) Tj T*
+(smoke-test gates.) Tj T*
 () Tj T*
 (Readiness by homework:) Tj T*
 () Tj T*
-(| Homework | Documentation readiness | Test completeness |) Tj T*
-(| --- | --- | --- |) Tj T*
-(| HW 0 Intro | Good | Not complete |) Tj T*
-(| HW 1 Lists | Good | Not complete |) Tj T*
-(| HW 2 Shell | Good | Not complete |) Tj T*
-(| HW 3 HTTP C | Good | Not complete |) Tj T*
-(| HW 3 HTTP Rust | Good | Partial, not complete |) Tj T*
-(| HW 4 Memory | Good | Partial, not complete |) Tj T*
-(| HW 5 MapReduce C | Good | Not complete |) Tj T*
-(| HW 5 MapReduce Rust | Good | Not complete |) Tj T*
+(| Homework | Documentation readiness | Test completeness | Current execution state |) Tj T*
+(| --- | --- | --- | --- |) Tj T*
+(| HW 0 Intro | Good | Not complete | Partial C build; words fails to compile |) Tj T*
+(| HW 1 Lists | Good | Not complete | Builds; only pthread smoke was run |) Tj T*
+(| HW 2 Shell | Good | Not complete | Builds; checked-in smoke test fails |) Tj T*
+(| HW 3 HTTP C | Good | Not complete | Builds; socket smoke test fails |) Tj T*
+(| HW 3 HTTP Rust | Good | Partial, not complete | Blocked by missing Cargo |) Tj T*
+(| HW 4 Memory | Good | Partial, not complete | mm_alloc fails to compile; Pintos suite) Tj T*
+(mostly fails |) Tj T*
+(| HW 5 MapReduce C | Good | Not complete | Build fails on missing RPC header |) Tj T*
+(| HW 5 MapReduce Rust | Good | Not complete | Blocked by missing Cargo |) Tj T*
 () Tj T*
 (Definition of done for future work) Tj T*
 (----------------------------------) Tj T*
@@ -499,19 +699,6 @@ BT
 () Tj T*
 (1. The homework builds in the expected Linux, WSL, or course VM environment.) Tj T*
 (2. The documented smoke commands pass.) Tj T*
-ET
-endstream
-endobj
-17 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
-endobj
-18 0 obj
-<< /Length 456 >>
-stream
-BT
-/F1 9 Tf
-12 TL
-48 744 Td
 (3. The repository contains deterministic automated tests for the main required) Tj T*
 (behavior.) Tj T*
 (4. Edge cases and failure modes listed in each README are covered.) Tj T*
@@ -522,33 +709,37 @@ BT
 ET
 endstream
 endobj
-19 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 18 0 R >>
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 22 0 R >>
 endobj
 xref
-0 20
+0 24
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000162 00000 n 
-0000000232 00000 n 
-0000002872 00000 n 
-0000002998 00000 n 
-0000005884 00000 n 
-0000006010 00000 n 
-0000007910 00000 n 
-0000008036 00000 n 
-0000010094 00000 n 
-0000010222 00000 n 
-0000012406 00000 n 
-0000012534 00000 n 
-0000014439 00000 n 
-0000014567 00000 n 
-0000016932 00000 n 
-0000017060 00000 n 
-0000017568 00000 n 
+0000000177 00000 n 
+0000000247 00000 n 
+0000002953 00000 n 
+0000003079 00000 n 
+0000006933 00000 n 
+0000007059 00000 n 
+0000009517 00000 n 
+0000009643 00000 n 
+0000012023 00000 n 
+0000012151 00000 n 
+0000014667 00000 n 
+0000014795 00000 n 
+0000017253 00000 n 
+0000017381 00000 n 
+0000020036 00000 n 
+0000020164 00000 n 
+0000022567 00000 n 
+0000022695 00000 n 
+0000025153 00000 n 
+0000025281 00000 n 
+0000027990 00000 n 
 trailer
-<< /Size 20 /Root 1 0 R >>
+<< /Size 24 /Root 1 0 R >>
 startxref
-17696
+28118
 %%EOF

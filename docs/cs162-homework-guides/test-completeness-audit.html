@@ -80,7 +80,7 @@
 <h1>CS 162 Homework Test Completeness Audit</h1>
 <p>Audit date: 2026-05-10</p>
 <h2>Scope</h2>
-<p>This report validates the homework documentation and the current testing state of this repository. It is based on the public CS 162 homework pages, the files in this repository, and the commands that could be attempted in the local Windows environment.</p>
+<p>This report validates the homework documentation and the current testing state of this repository. It is based on the public CS 162 homework pages, the files in this repository, and a WSL Ubuntu execution pass from the repository root.</p>
 <p>Official sources used:</p>
 <ul>
 <li><a href="https://cs162.org/static/hw/hw-intro/">https://cs162.org/static/hw/hw-intro/</a></li>
@@ -93,7 +93,7 @@
 <li><a href="https://cs162.org/static/hw/hw-map-reduce-rs/">https://cs162.org/static/hw/hw-map-reduce-rs/</a></li>
 </ul>
 <h2>Environment validation</h2>
-<p>The local environment is useful for static review, but it is not sufficient for full CS 162 execution testing.</p>
+<p>WSL Ubuntu is available and can execute the C and Pintos portions of the repository. Rust homework testing is still blocked because Cargo is not installed in the WSL image.</p>
 <p>Attempted commands:</p>
 <table>
 <tr>
@@ -102,19 +102,29 @@
 <th>Impact</th>
 </tr>
 <tr>
-<td><code>make --version</code></td>
-<td>Blocked: <code>make</code> is not installed</td>
-<td>C homework builds and Pintos tests cannot be executed locally.</td>
+<td><code>wsl -d Ubuntu -- bash -lc "uname -a"</code></td>
+<td>Passed</td>
+<td>WSL Ubuntu can be used for Linux-based validation.</td>
+</tr>
+<tr>
+<td><code>command -v make</code></td>
+<td>Passed: <code>/usr/bin/make</code></td>
+<td>C homework builds can be attempted.</td>
+</tr>
+<tr>
+<td><code>command -v gcc</code></td>
+<td>Passed: <code>/usr/local/bin/gcc</code></td>
+<td>C homework builds can be attempted.</td>
 </tr>
 <tr>
 <td><code>cargo --version</code></td>
-<td>Blocked: <code>cargo</code> is not installed</td>
-<td>Rust homework tests cannot be executed locally.</td>
+<td>Failed: <code>cargo: command not found</code></td>
+<td>Rust homework builds and tests cannot run until Rust is installed.</td>
 </tr>
 <tr>
-<td><code>bash -lc "uname -a"</code></td>
-<td>Blocked: WSL reports no installed Linux distribution</td>
-<td>Linux shell scripts and Unix signal tests cannot be executed locally.</td>
+<td><code>command -v qemu-system-i386</code></td>
+<td>Passed: <code>/usr/bin/qemu-system-i386</code></td>
+<td>Pintos can run once its bundled <code>pintos</code> script is placed on <code>PATH</code>.</td>
 </tr>
 <tr>
 <td>`rg -n "TODO</td>
@@ -123,14 +133,67 @@
 <td>Static implementation gaps were found and recorded below.</td>
 </tr>
 <tr>
-<td><code>rg -n "[\\p{Han}]" README.md hw-*/README.md</code></td>
-<td>Passed earlier</td>
+<td><code>rg -n "[\\p{Han}]" README.md hw-*/README.md docs/cs162-homework-guides</code></td>
+<td>Passed</td>
 <td>Repository homework documentation is English-only.</td>
 </tr>
 <tr>
 <td><code>git diff --check</code></td>
-<td>Passed earlier</td>
+<td>Passed</td>
 <td>Markdown files do not contain whitespace errors.</td>
+</tr>
+</table>
+<h2>Execution evidence summary</h2>
+<table>
+<tr>
+<th>Homework</th>
+<th>Command evidence</th>
+<th>Runtime verdict</th>
+</tr>
+<tr>
+<td><code>hw-intro</code></td>
+<td>Top-level <code>make</code> builds <code>map</code> and <code>limits</code>; <code>hw-intro/words make</code> fails with <code>-Werror=unused-but-set-variable</code> for <code>main.c:97</code> (<code>infile</code>).</td>
+<td>Partially builds; word-count tests cannot run.</td>
+</tr>
+<tr>
+<td><code>hw-list</code></td>
+<td><code>make</code> succeeds; <code>./pthread 2</code> runs as a smoke test.</td>
+<td>Builds, but correctness is not proven.</td>
+</tr>
+<tr>
+<td><code>hw-shell</code></td>
+<td><code>make</code> succeeds; <code>bash test.sh</code> fails because the script has CRLF line endings; a CRLF-normalized run still fails because <code>pwd</code> returns <code>This shell doesn't know how to run programs.</code></td>
+<td>Builds, but shell behavior fails the existing smoke test.</td>
+</tr>
+<tr>
+<td><code>hw-http</code></td>
+<td><code>make</code> succeeds with warnings; a live <code>httpserver --files www --port ...</code> smoke test logs repeated <code>Error accepting socket: Invalid argument</code>, and <code>curl</code> cannot connect.</td>
+<td>Builds, but the server fails a real socket smoke test.</td>
+</tr>
+<tr>
+<td><code>hw-http-rs</code></td>
+<td><code>cargo --version</code> fails.</td>
+<td>Not runnable in the current WSL image.</td>
+</tr>
+<tr>
+<td><code>hw-memory/mm_alloc</code></td>
+<td><code>make</code> fails under <code>-Werror</code> because <code>mm_malloc</code>, <code>mm_realloc</code>, and <code>mm_free</code> parameters are unused.</td>
+<td>Standalone allocator does not compile.</td>
+</tr>
+<tr>
+<td><code>hw-memory/pintos/src/memory</code></td>
+<td><code>make</code> succeeds; <code>make check</code> fails without <code>pintos</code> on <code>PATH</code>; with <code>PATH=../../utils:../utils:...</code>, the active Pintos memory suite produced 26 result files: 1 pass and 25 failures.</td>
+<td>Pintos builds, but memory tests are overwhelmingly failing.</td>
+</tr>
+<tr>
+<td><code>hw-map-reduce</code></td>
+<td><code>make</code> fails at <code>worker/../rpc/rpc.h:9:10: fatal error: rpc/rpc.h: No such file or directory</code>.</td>
+<td>C MapReduce does not compile in this WSL image.</td>
+</tr>
+<tr>
+<td><code>hw-map-reduce-rs</code></td>
+<td><code>cargo --version</code> fails.</td>
+<td>Not runnable in the current WSL image.</td>
 </tr>
 </table>
 <h2>Static evidence summary</h2>
@@ -145,7 +208,7 @@
 <tr>
 <td><code>hw-intro</code></td>
 <td>0</td>
-<td>No obvious placeholder markers, but no automated tests were found.</td>
+<td>No obvious placeholder markers, but <code>words</code> currently fails to compile under the provided flags.</td>
 </tr>
 <tr>
 <td><code>hw-list</code></td>
@@ -155,12 +218,12 @@
 <tr>
 <td><code>hw-shell</code></td>
 <td>0</td>
-<td>No TODO markers, but the test harness is only a smoke test.</td>
+<td>No TODO markers, but behavior is not implemented enough to pass the checked-in smoke test.</td>
 </tr>
 <tr>
 <td><code>hw-http</code></td>
 <td>15</td>
-<td>The C HTTP server still has several part-level TODO markers.</td>
+<td>The C HTTP server still has several part-level TODO markers and fails a socket smoke test.</td>
 </tr>
 <tr>
 <td><code>hw-http-rs</code></td>
@@ -170,12 +233,12 @@
 <tr>
 <td><code>hw-memory</code></td>
 <td>3</td>
-<td>The standalone allocator has unimplemented allocation functions.</td>
+<td>The standalone allocator has unimplemented allocation functions; the Pintos memory suite largely fails.</td>
 </tr>
 <tr>
 <td><code>hw-map-reduce</code></td>
 <td>6</td>
-<td>The C coordinator has visible TODO markers.</td>
+<td>The C coordinator has visible TODO markers and the project does not compile in WSL without RPC header fixes.</td>
 </tr>
 <tr>
 <td><code>hw-map-reduce-rs</code></td>
@@ -202,7 +265,7 @@
 </tr>
 <tr>
 <td><code>hw-shell</code></td>
-<td><code>test.sh</code> checks one <code>pwd</code> case and one <code>/bin/ls</code> case</td>
+<td><code>test.sh</code> checks one <code>pwd</code> case and one <code>/bin/ls</code> case, but currently fails</td>
 <td>Not complete</td>
 </tr>
 <tr>
@@ -217,8 +280,8 @@
 </tr>
 <tr>
 <td><code>hw-memory</code></td>
-<td><code>mm_alloc/mm_test.c</code>; 26 active Pintos memory tests in <code>Make.tests</code></td>
-<td>Partial; Pintos side is strongest, standalone allocator is not complete</td>
+<td><code>mm_alloc/mm_test.c</code>; 26 active Pintos memory tests in <code>Make.tests</code>; 36 memory <code>.ck</code> files total including the commented-out stack-growth group</td>
+<td>Partial; available tests reveal major failures</td>
 </tr>
 <tr>
 <td><code>hw-map-reduce</code></td>
@@ -233,7 +296,12 @@
 </table>
 <h2>Homework-by-homework validation</h2>
 <h3>HW 0: Intro</h3>
-<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cd hw-intro &amp;&amp; make</code> built <code>map</code> and <code>limits</code>.</li>
+<li><code>cd hw-intro/words &amp;&amp; make</code> failed because <code>main.c:97</code> defines <code>infile</code>,</li>
+<p>sets it, and never uses it while <code>-Werror</code> is enabled.</p>
+</ul>
 <p>Documentation correctness check:</p>
 <ul>
 <li>The README points to the correct official HW 0 page and counting-words task.</li>
@@ -242,24 +310,39 @@
 <p>multiple files, invalid flags, <code>limits</code>, and <code>map</code> output shape.</p>
 </ul>
 <p>Completeness verdict: not complete.</p>
-<p>Required next tests:</p>
+<p>Required implementation fix before tests can run:</p>
 <ul>
-<li>Add a <code>words/tests/</code> fixture directory.</li>
-<li>Add golden-output tests for <code>./words -c</code> and <code>./words -f</code>.</li>
-<li>Add stdin and multi-file tests.</li>
-<li>Add shape checks for <code>limits</code> and <code>map</code>.</li>
+<li>Either use <code>infile</code> in the intended input-file path or remove the unused</li>
+<p>variable without changing the required command behavior.</p>
 </ul>
-<p>Minimum command set to run in Linux or WSL:</p>
+<p>Missing tests to add:</p>
+<ul>
+<li>Add <code>words/tests/fixtures/basic.txt</code> with repeated words and punctuation.</li>
+<li>Add a golden-output test for <code>./words -c tests/fixtures/basic.txt</code>.</li>
+<li>Add a golden-output test for <code>./words -f tests/fixtures/basic.txt</code>.</li>
+<li>Add stdin coverage with <code>printf "one two one\n" | ./words -f</code>.</li>
+<li>Add multi-file coverage that verifies counts are combined correctly.</li>
+<li>Add invalid-flag and missing-file tests that assert nonzero exit status and a</li>
+<p>useful diagnostic.</p>
+<li>Add smoke checks for <code>./limits</code> and <code>./map</code> so their output format is stable.</li>
+</ul>
+<p>Minimum command set to run in Linux or WSL after the compile fix:</p>
 <pre><code>cd hw-intro
 make
 ./limits
 ./map
 cd words
 make
-./words -c tests/basic.txt
-./words -f tests/basic.txt</code></pre>
+./words -c tests/fixtures/basic.txt
+./words -f tests/fixtures/basic.txt</code></pre>
 <h3>HW 1: Lists</h3>
-<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cd hw-list &amp;&amp; make</code> succeeded.</li>
+<li><code>./pthread 2</code> ran, which only proves that one pthread smoke path starts.</li>
+<li>The smoke output alone does not prove that <code>list.c</code>, <code>lwords</code>, or <code>pwords</code></li>
+<p>are correct.</p>
+</ul>
 <p>Static evidence:</p>
 <ul>
 <li><code>word_count_l.c</code>, <code>word_count_p.c</code>, and <code>pwords.c</code> still contain TODO</li>
@@ -273,12 +356,17 @@ make
 <p>right local strategy for this homework.</p>
 </ul>
 <p>Completeness verdict: not complete.</p>
-<p>Required next tests:</p>
+<p>Missing tests to add:</p>
 <ul>
-<li>Add deterministic word-count fixtures.</li>
-<li>Compare <code>lwords</code> and <code>pwords</code> against the reference <code>words</code> binary.</li>
-<li>Add a repeated <code>pwords</code> race test.</li>
-<li>Add memory-check instructions with Valgrind or sanitizers.</li>
+<li>Add deterministic word-count fixtures for empty input, one word, repeated</li>
+<p>words, mixed case, punctuation, and multiple files.</p>
+<li>Compare <code>lwords</code> and <code>pwords</code> output against the reference <code>words</code> binary.</li>
+<li>Add a repeated race test that runs <code>pwords</code> at least 50 times on the same</li>
+<p>fixture and diffs every result against the reference output.</p>
+<li>Add a large-input test to exercise list insertion, lookup, sorting, and</li>
+<p>concurrent updates.</p>
+<li>Add sanitizer or Valgrind instructions for list memory ownership and thread</li>
+<p>lifetime bugs.</p>
 </ul>
 <p>Minimum command set to run in Linux or WSL:</p>
 <pre><code>cd hw-list
@@ -289,11 +377,13 @@ make
 diff -u /tmp/ref.out /tmp/lwords.out
 diff -u /tmp/ref.out /tmp/pwords.out</code></pre>
 <h3>HW 2: Shell</h3>
-<p>Local execution status: blocked by missing <code>make</code> and unavailable WSL Linux environment.</p>
-<p>Static evidence:</p>
+<p>Observed WSL result:</p>
 <ul>
-<li><code>test.sh</code> exists and is readable.</li>
-<li>It currently checks only <code>pwd</code> and <code>/bin/ls</code>.</li>
+<li><code>cd hw-shell &amp;&amp; make</code> succeeded.</li>
+<li><code>bash test.sh</code> failed first because the script has Windows CRLF endings.</li>
+<li>Running a CRLF-normalized version still failed the built-in <code>pwd</code> check.</li>
+<li>Manual probes such as <code>printf "pwd\n" | ./shell</code> and</li>
+<p><code>printf "/bin/echo hello\n" | ./shell</code> returned <code>This shell doesn't know how to run programs.</code></p>
 </ul>
 <p>Documentation correctness check:</p>
 <ul>
@@ -303,11 +393,24 @@ diff -u /tmp/ref.out /tmp/pwords.out</code></pre>
 <p>environment-sensitive signal tests.</p>
 </ul>
 <p>Completeness verdict: not complete.</p>
-<p>Required next tests:</p>
+<p>Required implementation and harness fixes before broader testing:</p>
 <ul>
-<li>Expand <code>test.sh</code> into a table-driven harness.</li>
-<li>Add <code>cd</code>, invalid command, redirection, pipe, and tokenizer tests.</li>
-<li>Add Linux-only signal tests for Ctrl-C and Ctrl-Z behavior.</li>
+<li>Convert <code>test.sh</code> to LF line endings or make the runner normalize line</li>
+<p>endings before execution.</p>
+<li>Implement built-ins and program execution enough for <code>pwd</code>, <code>cd</code>, and</li>
+<p><code>/bin/echo</code> or <code>/bin/ls</code> to behave correctly.</p>
+</ul>
+<p>Missing tests to add:</p>
+<ul>
+<li>Add table-driven tests for <code>pwd</code>, <code>cd /</code>, <code>cd ..</code>, <code>cd</code> with no argument, and</li>
+<p>invalid <code>cd</code> targets.</p>
+<li>Add foreground execution tests for <code>/bin/echo</code>, <code>/bin/true</code>, <code>/bin/false</code>,</li>
+<p>and an invalid command.</p>
+<li>Add output-redirection tests that verify file content and overwrite behavior.</li>
+<li>Add pipe tests for <code>echo hello | wc -w</code> and a multi-stage pipeline.</li>
+<li>Add Ctrl-D behavior tests using stdin closure.</li>
+<li>Add Linux-only Ctrl-C and Ctrl-Z tests using a pseudo-terminal harness, with</li>
+<p>explicit timeouts.</p>
 </ul>
 <p>Minimum command set to run in Linux or WSL:</p>
 <pre><code>cd hw-shell
@@ -316,7 +419,14 @@ bash test.sh
 printf "cd /\npwd\n" | ./shell
 printf "echo hello | wc -w\n" | ./shell</code></pre>
 <h3>HW 3: HTTP Server in C</h3>
-<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cd hw-http &amp;&amp; make</code> succeeded with warnings.</li>
+<li>A live server smoke test using <code>./httpserver --files www --port 18085</code> failed.</li>
+<li>The server log repeatedly printed <code>Error accepting socket: Invalid argument</code>.</li>
+<li><code>curl --noproxy 127.0.0.1 -i --max-time 3 http://127.0.0.1:18085/</code></li>
+<p>could not connect.</p>
+</ul>
 <p>Static evidence:</p>
 <ul>
 <li><code>httpserver.c</code> contains part-level TODO markers for file serving, directory</li>
@@ -330,21 +440,41 @@ printf "echo hello | wc -w\n" | ./shell</code></pre>
 <li>The missing-test prompts require real socket tests, not just unit tests.</li>
 </ul>
 <p>Completeness verdict: not complete.</p>
-<p>Required next tests:</p>
+<p>Required implementation fix before deeper tests:</p>
 <ul>
-<li>Add <code>tests/http_smoke.sh</code>.</li>
-<li>Run it against <code>httpserver</code>, <code>forkserver</code>, <code>threadserver</code>, and <code>poolserver</code>.</li>
-<li>Add status, header, body, directory, traversal, malformed request, proxy, and</li>
-<p>concurrency checks.</p>
+<li>Fix the accept loop so the server can accept a local TCP client without</li>
+<p>logging <code>Invalid argument</code>.</p>
+<li>Address compile warnings in paths that should return a value or use required</li>
+<p>parameters.</p>
 </ul>
-<p>Minimum command set to run in Linux or WSL:</p>
+<p>Missing tests to add:</p>
+<ul>
+<li>Add <code>tests/http_smoke.sh</code> that starts a server on a random available port,</li>
+<p>waits for readiness, sends requests, and always kills the server on exit.</p>
+<li>Run the same smoke harness against <code>httpserver</code>, <code>forkserver</code>,</li>
+<p><code>threadserver</code>, and <code>poolserver</code>.</p>
+<li>Add <code>200</code>, <code>404</code>, and malformed-request tests.</li>
+<li>Add header tests for <code>Content-Length</code>, connection behavior, and MIME type</li>
+<p>where required.</p>
+<li>Add directory listing and <code>index.html</code> tests if those are part of the target</li>
+<p>assignment version.</p>
+<li>Add path traversal tests such as <code>GET /../secret</code>.</li>
+<li>Add proxy tests with a small local upstream server.</li>
+<li>Add concurrency tests that issue many simultaneous requests and compare every</li>
+<p>response body.</p>
+</ul>
+<p>Minimum command set to run in Linux or WSL after the accept fix:</p>
 <pre><code>cd hw-http
 make
 ./httpserver --files www --port 8000
-curl -i http://127.0.0.1:8000/
-curl -i http://127.0.0.1:8000/not-found</code></pre>
+curl --noproxy 127.0.0.1 -i http://127.0.0.1:8000/
+curl --noproxy 127.0.0.1 -i http://127.0.0.1:8000/not-found</code></pre>
 <h3>HW 3: HTTP Server in Rust</h3>
-<p>Local execution status: blocked by missing <code>cargo</code>.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cargo --version</code> failed with <code>cargo: command not found</code>.</li>
+<li>Rust build and test commands were not runnable in the current WSL image.</li>
+</ul>
 <p>Static evidence:</p>
 <ul>
 <li><code>src/http.rs</code>, <code>src/server.rs</code>, and <code>src/stats.rs</code> contain <code>todo!</code></li>
@@ -360,12 +490,21 @@ curl -i http://127.0.0.1:8000/not-found</code></pre>
 <p>tests, stats integration checks, and concurrent client coverage.</p>
 </ul>
 <p>Completeness verdict: partial, not complete.</p>
-<p>Required next tests:</p>
+<p>Required environment fix before testing:</p>
 <ul>
-<li>Keep current helper tests.</li>
-<li>Add <code>tests/server_integration.rs</code>.</li>
-<li>Add request parser coverage and real TCP client tests.</li>
-<li>Verify stats after real requests.</li>
+<li>Install Rust and Cargo in WSL, then run the command set below.</li>
+</ul>
+<p>Missing tests to add:</p>
+<ul>
+<li>Keep the current helper tests.</li>
+<li>Add request parser tests for valid requests, bad methods, bad paths, missing</li>
+<p>headers, partial reads, and malformed bytes.</p>
+<li>Add <code>tests/server_integration.rs</code> that starts the server on an ephemeral port</li>
+<p>and sends real TCP requests.</p>
+<li>Add file-serving tests for success, not found, directory handling, and path</li>
+<p>traversal.</p>
+<li>Add stats tests that make real requests and verify the stats endpoint.</li>
+<li>Add concurrent-client tests with timeouts.</li>
 </ul>
 <p>Minimum command set to run in Linux, WSL, or a Rust environment:</p>
 <pre><code>cd hw-http-rs
@@ -373,12 +512,23 @@ cargo test
 cargo test --test server_integration
 cargo run -- --files www --port 8000</code></pre>
 <h3>HW 4: Memory</h3>
-<p>Local execution status: blocked by missing <code>make</code> and unavailable Pintos Linux environment.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cd hw-memory/mm_alloc &amp;&amp; make</code> failed because <code>mm_malloc</code>, <code>mm_realloc</code>,</li>
+<p>and <code>mm_free</code> leave parameters unused under <code>-Werror</code>.</p>
+<li><code>cd hw-memory/pintos/src/memory &amp;&amp; make</code> succeeded.</li>
+<li><code>make check</code> first failed because <code>pintos</code> was not on <code>PATH</code>.</li>
+<li>With <code>PATH=../../utils:../utils:...</code>, the active Pintos memory suite produced</li>
+<p>26 result files before manual cleanup of the long-running command.</p>
+<li>Only <code>malloc-null</code> passed. The other 25 active results failed, including</li>
+<p><code>sbrk-small</code>, <code>sbrk-zero</code>, <code>sbrk-many</code>, <code>malloc-simple</code>, <code>malloc-free</code>, <code>malloc-fit</code>, <code>malloc-fail</code>, <code>malloc-merge-*</code>, and <code>realloc-*</code>.</p>
+</ul>
 <p>Static evidence:</p>
 <ul>
 <li><code>mm_alloc/mm_alloc.c</code> contains TODO markers for malloc, realloc, and free.</li>
 <li><code>pintos/src/tests/memory/Make.tests</code> enables 26 active memory tests.</li>
-<li>Stack-growth tests are present but commented out.</li>
+<li>The directory contains 36 memory <code>.ck</code> files total; the stack-growth group is</li>
+<p>present but commented out for this assignment version.</p>
 </ul>
 <p>Documentation correctness check:</p>
 <ul>
@@ -388,11 +538,23 @@ cargo run -- --files www --port 8000</code></pre>
 <p>test list does not show explicit <code>calloc</code> tests.</p>
 </ul>
 <p>Completeness verdict: partial, not complete.</p>
-<p>Required next tests:</p>
+<p>Required implementation and environment fixes before full validation:</p>
 <ul>
-<li>Expand standalone allocator tests for alignment, reuse, realloc growth and</li>
-<p>shrink, fragmentation, and stress.</p>
-<li>Run Pintos <code>make check</code> in the course environment.</li>
+<li>Implement <code>mm_malloc</code>, <code>mm_realloc</code>, and <code>mm_free</code> enough for <code>mm_alloc</code> to</li>
+<p>compile.</p>
+<li>Run Pintos checks with the bundled utilities on <code>PATH</code>.</li>
+<li>Investigate the <code>sbrk</code> failures first; many allocator tests fail because the</li>
+<p>user heap contract is not working.</p>
+</ul>
+<p>Missing tests to add:</p>
+<ul>
+<li>Expand standalone allocator tests for alignment, zero-size allocation,</li>
+<p>allocation reuse, splitting, coalescing, realloc growth, realloc shrink, realloc-to-null behavior, free-null behavior, double-free policy, and fragmentation stress.</p>
+<li>Add a deterministic standalone stress test that allocates and frees many</li>
+<p>differently sized blocks.</p>
+<li>Add a test that writes through every allocated byte to catch invalid returned</li>
+<p>pointers.</p>
+<li>Add a documented Pintos command that includes the required <code>PATH</code> setup.</li>
 <li>Decide whether stack-growth tests are required for the target assignment</li>
 <p>version before enabling them.</p>
 </ul>
@@ -403,9 +565,14 @@ make
 
 cd ../pintos/src/memory
 make
-make check</code></pre>
+env PATH=../../utils:../utils:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin make check</code></pre>
 <h3>HW 5: MapReduce in C</h3>
-<p>Local execution status: blocked by missing <code>make</code>.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cd hw-map-reduce &amp;&amp; make</code> failed while compiling <code>worker/worker.o</code>.</li>
+<li>The immediate error was</li>
+<p><code>worker/../rpc/rpc.h:9:10: fatal error: rpc/rpc.h: No such file or directory</code>.</p>
+</ul>
 <p>Static evidence:</p>
 <ul>
 <li>The C coordinator contains TODO markers.</li>
@@ -419,15 +586,23 @@ make check</code></pre>
 <p>output comparison.</p>
 </ul>
 <p>Completeness verdict: not complete.</p>
-<p>Required next tests:</p>
+<p>Required environment or build fix before tests can run:</p>
 <ul>
-<li>Add <code>tests/run_cluster_test.sh</code>.</li>
-<li>Start coordinator and workers automatically.</li>
-<li>Submit <code>wc</code>, <code>grep</code>, and <code>vertex_degree</code> jobs.</li>
-<li>Compare processed output against golden files.</li>
-<li>Add worker-failure retry coverage.</li>
+<li>Install the required SunRPC/TIRPC development headers in WSL, or adjust the</li>
+<p>include path and Makefile so <code>rpc/rpc.h</code> resolves consistently.</p>
 </ul>
-<p>Minimum command set to run in Linux or WSL:</p>
+<p>Missing tests to add:</p>
+<ul>
+<li>Add <code>tests/run_cluster_test.sh</code> that starts the coordinator and workers,</li>
+<p>submits a job, processes output, validates output, and kills all child processes on exit.</p>
+<li>Add <code>wc</code>, <code>grep</code>, and <code>vertex_degree</code> golden-output fixtures.</li>
+<li>Add a no-input or empty-input job test.</li>
+<li>Add repeated job-submission tests to verify job IDs and output directories.</li>
+<li>Add worker-failure retry coverage by killing a worker mid-task.</li>
+<li>Add timeout handling so a hung coordinator or worker fails the test instead</li>
+<p>of blocking forever.</p>
+</ul>
+<p>Minimum command set to run in Linux or WSL after RPC headers are fixed:</p>
 <pre><code>cd hw-map-reduce
 make
 ./bin/mr-coordinator
@@ -435,7 +610,11 @@ make
 ./bin/mr-client submit -a wc -o /tmp/hw-map-reduce-out -w data/gutenberg/p.txt
 ./bin/mr-client process -a wc -o /tmp/hw-map-reduce-out</code></pre>
 <h3>HW 5: MapReduce in Rust</h3>
-<p>Local execution status: blocked by missing <code>cargo</code>.</p>
+<p>Observed WSL result:</p>
+<ul>
+<li><code>cargo --version</code> failed with <code>cargo: command not found</code>.</li>
+<li>Rust build and test commands were not runnable in the current WSL image.</li>
+</ul>
 <p>Static evidence:</p>
 <ul>
 <li><code>src/coordinator/mod.rs</code> still contains job-submission TODOs.</li>
@@ -450,65 +629,85 @@ make
 <p>integration tests.</p>
 </ul>
 <p>Completeness verdict: not complete.</p>
-<p>Required next tests:</p>
+<p>Required environment fix before testing:</p>
+<ul>
+<li>Install Rust and Cargo in WSL, then run the command set below.</li>
+</ul>
+<p>Missing tests to add:</p>
 <ul>
 <li>Finish <code>test_wc</code> with a real fixture and expected output.</li>
-<li>Add worker-registration, job-submission, task-assignment, completion, and</li>
-<p>heartbeat/retry tests.</p>
-<li>Add <code>wc</code>, <code>grep</code>, and <code>vertex_degree</code> integration tests with timeouts.</li>
+<li>Add worker-registration tests for unique worker IDs and duplicate</li>
+<p>registrations.</p>
+<li>Add job-submission tests for valid apps, invalid apps, missing input files,</li>
+<p>and output-directory collisions.</p>
+<li>Add task-assignment tests for map tasks, reduce tasks, and no-work responses.</li>
+<li>Add completion tests for successful tasks, failed tasks, duplicate</li>
+<p>completions, and stale worker reports.</p>
+<li>Add heartbeat and retry tests with controlled timeouts.</li>
+<li>Add <code>wc</code>, <code>grep</code>, and <code>vertex_degree</code> async integration tests that start the</li>
+<p>coordinator and workers and compare final outputs to golden files.</p>
 </ul>
 <p>Minimum command set to run in Linux, WSL, or a Rust environment:</p>
 <pre><code>cd hw-map-reduce-rs
 cargo test
 cargo test test_wc -- --ignored</code></pre>
 <h2>Overall verdict</h2>
-<p>The homework documentation is now stronger than a plain official assignment page because it is tied directly to this repository and its current testing state. However, the assignments themselves are not fully tested yet.</p>
+<p>The homework documentation is now stronger than a plain official assignment page because it is tied directly to this repository and its current testing state. The WSL validation pass also shows that the assignments themselves are not fully tested and, in several cases, are not yet passing basic build or smoke-test gates.</p>
 <p>Readiness by homework:</p>
 <table>
 <tr>
 <th>Homework</th>
 <th>Documentation readiness</th>
 <th>Test completeness</th>
+<th>Current execution state</th>
 </tr>
 <tr>
 <td>HW 0 Intro</td>
 <td>Good</td>
 <td>Not complete</td>
+<td>Partial C build; <code>words</code> fails to compile</td>
 </tr>
 <tr>
 <td>HW 1 Lists</td>
 <td>Good</td>
 <td>Not complete</td>
+<td>Builds; only pthread smoke was run</td>
 </tr>
 <tr>
 <td>HW 2 Shell</td>
 <td>Good</td>
 <td>Not complete</td>
+<td>Builds; checked-in smoke test fails</td>
 </tr>
 <tr>
 <td>HW 3 HTTP C</td>
 <td>Good</td>
 <td>Not complete</td>
+<td>Builds; socket smoke test fails</td>
 </tr>
 <tr>
 <td>HW 3 HTTP Rust</td>
 <td>Good</td>
 <td>Partial, not complete</td>
+<td>Blocked by missing Cargo</td>
 </tr>
 <tr>
 <td>HW 4 Memory</td>
 <td>Good</td>
 <td>Partial, not complete</td>
+<td><code>mm_alloc</code> fails to compile; Pintos suite mostly fails</td>
 </tr>
 <tr>
 <td>HW 5 MapReduce C</td>
 <td>Good</td>
 <td>Not complete</td>
+<td>Build fails on missing RPC header</td>
 </tr>
 <tr>
 <td>HW 5 MapReduce Rust</td>
 <td>Good</td>
 <td>Not complete</td>
+<td>Blocked by missing Cargo</td>
 </tr>
 </table>
 <h2>Definition of done for future work</h2>

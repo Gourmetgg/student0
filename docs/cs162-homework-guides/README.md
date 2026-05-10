@@ -10,7 +10,7 @@ Artifacts
 - `cs162-homework-companion.md`: generated from the root README and every
   `hw-*` README. It is the printable companion guide.
 - `test-completeness-audit.md`: a hand-written validation report that explains
-  what was checked, which commands were blocked locally, and whether each
+  what was checked in WSL, which commands passed or failed, and whether each
   homework's testing is complete.
 - `build-pdfs.js`: a small Node script that rebuilds the companion guide,
   renders Markdown to HTML, and asks Chrome or Edge to print PDFs when a
@@ -44,6 +44,6 @@ From the repository root:
 node docs/cs162-homework-guides/build-pdfs.js
 ```
 
-The script requires Node and a local Chrome or Edge installation for PDF
-printing. If no supported browser is available, it still writes the generated
-Markdown and HTML files.
+The script requires Node. When Chrome or Edge PDF printing is not available,
+it still writes the generated Markdown, HTML, and a simple text-based PDF
+fallback.
