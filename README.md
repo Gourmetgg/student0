@@ -1,50 +1,83 @@
 CS 162 Student Repository
 =========================
 
-This repository contains code for CS 162 individual assignments.
+This repository contains code for the CS 162 individual homework assignments.
+The documentation in each homework directory is written in an assignment-report
+style and aligned with the public CS 162 homework pages.
 
-Homework documentation
-----------------------
+Documentation index
+-------------------
 
-Each homework directory has its own English README with an assignment-style
-overview, key files, build commands, local test commands, and a test
-completeness review.
+- [`hw-intro`](hw-intro/README.md): HW 0, C tools, user limits, memory layout,
+  GDB basics, and word counting.
+- [`hw-list`](hw-list/README.md): HW 1, Pintos lists, pthread practice, and
+  threaded word counting.
+- [`hw-shell`](hw-shell/README.md): HW 2, directory commands, program
+  execution, path resolution, redirection, pipes, and signal handling.
+- [`hw-http`](hw-http/README.md): HW 3 C HTTP server, socket setup, GET
+  handling, proxying, server variants, and performance.
+- [`hw-http-rs`](hw-http-rs/README.md): HW 3 Rust HTTP server, socket handling,
+  GET parsing, directory responses, and statistics.
+- [`hw-memory`](hw-memory/README.md): HW 4, Pintos `sbrk`, user heap growth,
+  and user-space allocation library functions.
+- [`hw-map-reduce`](hw-map-reduce/README.md): HW 5 C MapReduce coordinator,
+  worker, client, task scheduling, and fault tolerance.
+- [`hw-map-reduce-rs`](hw-map-reduce-rs/README.md): HW 5 Rust MapReduce
+  coordinator, worker registration, task distribution, and fault tolerance.
 
-- [`hw-intro`](hw-intro/README.md): C basics, process limits, memory layout, and word count.
-- [`hw-list`](hw-list/README.md): Pintos lists, word count data structures, and pthread word count.
-- [`hw-shell`](hw-shell/README.md): A small Unix-style shell and tokenizer.
-- [`hw-memory`](hw-memory/README.md): Standalone allocator practice plus Pintos memory tests.
-- [`hw-map-reduce`](hw-map-reduce/README.md): C MapReduce coordinator, worker, client, and applications.
-- [`hw-map-reduce-rs`](hw-map-reduce-rs/README.md): Rust MapReduce coordinator, worker, client, and applications.
-- [`hw-http`](hw-http/README.md): C HTTP file server, proxy path, and concurrency variants.
-- [`hw-http-rs`](hw-http-rs/README.md): Rust HTTP server helpers, server logic, and statistics.
+Source alignment
+----------------
 
-Testing audit summary
----------------------
+The homework summaries and test expectations are based on the current public
+CS 162 pages:
 
-This audit is based on the repository contents. The local Windows environment
-used for this documentation did not have `make`, `cargo`, or a configured WSL
-Linux distribution, so the tests were not executed end-to-end here. Run the
-commands from a Linux, WSL, or course VM environment with the assignment
-dependencies installed.
+- <https://cs162.org/static/hw/hw-intro/>
+- <https://cs162.org/static/hw/hw-list/>
+- <https://cs162.org/static/hw/hw-shell/>
+- <https://cs162.org/static/hw/hw-http/>
+- <https://cs162.org/static/hw/hw-http-rs/>
+- <https://cs162.org/static/hw/hw-memory/>
+- <https://cs162.org/static/hw/hw-map-reduce/>
+- <https://cs162.org/static/hw/hw-map-reduce-rs/>
 
-The current test coverage is not complete for most homework directories:
+Repository-wide test audit
+--------------------------
 
-- Strongest local harness: `hw-memory/pintos/src/tests/memory` defines 26 active
-  Pintos memory tests through `Make.tests`. Additional `.ck` files exist, but
-  the stack-growth group is currently commented out in that Makefile.
-- Partial helper-level coverage: `hw-http-rs` has 12 Rust tests for argument
-  defaults, MIME type mapping, response-header helpers, and statistics helpers.
-  It still needs full server integration and concurrency tests.
-- Smoke-test coverage only: `hw-shell/test.sh` checks one built-in command and
-  one external command. `hw-memory/mm_alloc/mm_test.c` is a minimal allocator
-  smoke test.
-- No automated local test harness found: `hw-intro`, `hw-list`,
-  `hw-map-reduce`, and `hw-http` rely on manual commands or comparison against
-  expected behavior.
-- Unfinished ignored test: `hw-map-reduce-rs/src/tests/mod.rs` contains an
-  ignored `test_wc` with a `todo!` placeholder for the input file.
+This repository does not currently have complete local automated testing for
+every homework. The audit below describes the state of the repository, not the
+official course autograder. The local Windows environment used for this audit
+did not have `make`, `cargo`, or a configured WSL Linux distribution, so tests
+were not executed end-to-end here. Run the listed commands in Linux, WSL, or
+the CS 162 course environment.
 
-Use the per-homework READMEs as the source of truth for what is currently
-covered, what is missing, and what should be added before considering each
-homework well tested.
+Current coverage:
+
+- `hw-memory/pintos/src/tests/memory/Make.tests` is the strongest test suite in
+  this repository. It enables 26 active Pintos memory tests covering `sbrk`,
+  `malloc`, `free`, and `realloc` behavior. `calloc` still deserves explicit
+  additional coverage.
+- `hw-http-rs/src/tests/` has helper-level Rust tests for argument defaults,
+  MIME type helpers, response helpers, and statistics.
+- `hw-shell/test.sh` is a small smoke test for one built-in command and one
+  external command.
+- `hw-memory/mm_alloc/mm_test.c` is a minimal allocator smoke test.
+- `hw-map-reduce-rs/src/tests/mod.rs` contains an ignored `test_wc` with a
+  placeholder input path, so default `cargo test` does not validate a full
+  MapReduce run.
+
+Major missing coverage:
+
+- `hw-intro`, `hw-list`, `hw-http`, and `hw-map-reduce` need checked-in test
+  harnesses with deterministic fixtures and golden outputs.
+- `hw-shell` needs tests for the full CS 162 shell surface: `cd`, `pwd`,
+  external program execution, path resolution, redirection, pipes, Ctrl-D,
+  Ctrl-C, and Ctrl-Z behavior.
+- `hw-http` and `hw-http-rs` need real server integration tests that send HTTP
+  requests over sockets and assert status lines, headers, bodies, directory
+  responses, malformed requests, and concurrent clients.
+- `hw-map-reduce` and `hw-map-reduce-rs` need integration tests that start a
+  coordinator, start workers, submit jobs, compare output to golden files, and
+  validate retry behavior after worker failure.
+
+Each homework README gives detailed prompts for the exact tests that should be
+added next.

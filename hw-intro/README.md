@@ -1,83 +1,163 @@
-HW Intro
-========
+HW 0: Intro
+===========
 
-Overview
---------
+Official reference:
 
-This homework introduces C programming in a systems context. It includes small
-programs for process limits and memory layout, plus a word-count exercise that
-uses command-line flags, file input, and formatted output.
+- <https://cs162.org/static/hw/hw-intro/>
+- <https://cs162.org/static/hw/hw-intro/docs/counting-words/>
 
-Key files
----------
+Assignment goals
+----------------
 
-- `Makefile`: builds the top-level `map` and `limits` programs.
-- `limits.c`: reports resource-limit information.
-- `map.c` and `recurse.c`: inspect stack, heap, and recursive call behavior.
-- `words/Makefile`: builds the word-count executable.
-- `words/main.c` and `words/word_count.c`: implement the word-count behavior.
-- `words/gutenberg/`: larger manual input files for stress and sanity checks.
+This homework is the CS 162 warm-up for C programming and Unix development. It
+exercises compilation with `make`, command-line tools, resource limits, memory
+layout, debugging, and a small word-count program.
 
-Build
------
+The word-count portion follows the official `hw-intro/words` task shape:
+implement the counting helpers, free all allocated structures, and make the
+main program handle one or more input files and command-line output modes.
+
+Key implementation areas
+------------------------
+
+- `limits.c`: inspect and print process resource limits with real values.
+- `map.c` and `recurse.c`: observe process memory layout, stack growth, heap
+  allocation, and recursive stack behavior.
+- `words/main.c`: parse flags, open input streams, combine file results, and
+  choose output format.
+- `words/word_count.c`: implement `num_words`, `count_words`, and
+  `free_words`.
+- `words/gutenberg/`: larger text inputs for manual stress checks.
+
+Build and run
+-------------
 
 ```sh
 cd hw-intro
 make
+./limits
+./map
 
 cd words
 make
-```
-
-Local test plan
----------------
-
-Run basic smoke checks for the top-level programs:
-
-```sh
-cd hw-intro
-./limits
-./map
-```
-
-Run the word-count executable against small and larger inputs:
-
-```sh
-cd hw-intro/words
 ./words -h
 ./words -c words.txt
 ./words -f words.txt
 ./words -c gutenberg/alice.txt
 ```
 
-Test completeness review
-------------------------
+Current test inventory
+----------------------
 
-Current status: incomplete. The repository has build targets and sample input
-files, but no automated test script or golden-output fixtures for this homework.
-The commands above are smoke tests only.
+No checked-in automated test harness was found for this homework. The current
+coverage is manual smoke testing only:
 
-What is currently covered:
+- Compile `limits`, `map`, and `words`.
+- Run `limits` and inspect whether the output is plausible.
+- Run `map` and inspect whether stack, heap, globals, and code addresses are
+  distinguishable.
+- Run `words` on sample files and compare output by hand.
 
-- Compilation of `map`, `limits`, and `words`.
-- Manual execution of resource-limit and memory-layout programs.
-- Manual word-count execution on one small file and larger Gutenberg files.
+Completeness assessment
+-----------------------
 
-Important gaps:
+Coverage is incomplete. The official homework expects several behaviors that
+should be asserted automatically:
 
-- No automated assertion that `limits` reports real `getrlimit` values instead
-  of placeholder values.
-- No automated assertion for expected `map` output shape.
-- No golden-output tests for word totals, word-frequency output, stdin input,
-  multiple input files, empty files, punctuation, capitalization, or invalid
-  flags.
+- `words` should count words accurately for file input.
+- Frequency output should be deterministic enough to compare against expected
+  content after sorting if the program order is not specified.
+- Multiple input files should be processed as one combined stream.
+- Stdin behavior should work when no file path is supplied or when the chosen
+  mode expects stream input.
+- Empty files, missing files, invalid flags, punctuation, repeated words, and
+  case behavior should be tested.
+- `limits` and `map` need shape checks so placeholder or all-zero output is
+  caught early.
 
-Recommended missing tests
--------------------------
+Detailed missing-test prompts
+-----------------------------
 
-- Add a small `tests/` directory with fixed input files and expected outputs.
-- Add a `make test` target that rebuilds and compares `./words` output with
-  checked-in golden files.
-- Add stdin coverage, for example `printf "one two one\n" | ./words -f`.
-- Add negative tests for bad flags and missing files.
-- Add a limit sanity test that fails if all reported values remain zero.
+1. Add `words/tests/basic.txt`:
+
+   ```text
+   hello hello world
+   systems world hello
+   ```
+
+   Add expected checks:
+
+   - `./words -c tests/basic.txt` should report `6` total words.
+   - `./words -f tests/basic.txt` should include `hello` with count `3`,
+     `world` with count `2`, and `systems` with count `1`.
+   - If output order can vary, normalize with `sort` before comparing.
+
+2. Add `words/tests/punctuation.txt`:
+
+   ```text
+   Hello, hello! HELLO?
+   cs-162 cs162
+   ```
+
+   The test should document the expected tokenizer policy. If punctuation is a
+   separator and case is preserved, check those exact tokens. If case is folded,
+   check the folded counts. This fixture prevents silent changes to token
+   parsing.
+
+3. Add `words/tests/multifile_a.txt` and `words/tests/multifile_b.txt`:
+
+   ```text
+   alpha beta
+   ```
+
+   ```text
+   beta gamma gamma
+   ```
+
+   Test command:
+
+   ```sh
+   ./words -f tests/multifile_a.txt tests/multifile_b.txt
+   ```
+
+   Expected content: `alpha: 1`, `beta: 2`, `gamma: 2`.
+
+4. Add stdin coverage:
+
+   ```sh
+   printf "one two one\n" | ./words -f
+   ```
+
+   Assert `one: 2` and `two: 1`. This catches programs that only work when
+   `fopen` succeeds on a path.
+
+5. Add failure-mode coverage:
+
+   ```sh
+   ./words -z tests/basic.txt
+   ./words -c tests/does-not-exist.txt
+   ```
+
+   Assert a non-zero exit status and a useful error message on stderr.
+
+6. Add `limits` sanity coverage in `hw-intro/test_intro.sh`:
+
+   - Run `./limits`.
+   - Fail if the output is empty.
+   - Fail if every numeric field is `0`.
+   - Fail if expected limit names such as stack, file size, or address space are
+     missing.
+
+7. Add `map` shape coverage:
+
+   - Run `./map`.
+   - Assert that it prints labels for stack, heap, globals, and code/text.
+   - Assert that address-looking values are present.
+   - Avoid hard-coding exact addresses because ASLR makes them unstable.
+
+Suggested `make test` target
+----------------------------
+
+Add a `test` target that calls a script such as `tests/run_hw_intro_tests.sh`.
+That script should rebuild the homework, run the fixture tests, normalize output
+where needed, and return a non-zero exit status on the first failure.
