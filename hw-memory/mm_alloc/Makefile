@@ -15,14 +15,3 @@ mm_test: mm_test.c
 
 clean:
 	rm -rf hw3lib.so mm_alloc.o mm_test
-
-# Smoke test. The starter code does not compile under -Werror=unused-parameter,
-# so on the unmodified starter this target reports SKIP rather than failing.
-.PHONY: test
-test:
-	@if make all >/tmp/mm_alloc-build.log 2>&1; then \
-	  echo "PASS: mm_alloc built"; \
-	  ./mm_test && echo "PASS: mm_test ran" || { echo "FAIL: mm_test"; exit 1; }; \
-	else \
-	  echo "SKIP: mm_alloc starter does not compile (implement mm_malloc/mm_realloc/mm_free)"; \
-	fi

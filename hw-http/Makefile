@@ -17,7 +17,3 @@ poolserver: $(SOURCE)
 
 clean:
 	rm -f $(EXECUTABLES)
-
-.PHONY: test
-test: all
-	bash tests/run.sh

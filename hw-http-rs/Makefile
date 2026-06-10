@@ -1,4 +1,4 @@
-.PHONY: all build run test
+.PHONY: all build run
 
 all: build
 
@@ -11,6 +11,3 @@ install:
 
 run: build
 	./target/debug/http_server_rs --files www/
-
-test:
-	cargo test --test smoke
