@@ -1,67 +1,48 @@
 #!/usr/bin/env bash
-# Repository-wide test driver.
+# run_all_tests.sh — drive every assignment's test suite in order.
 #
-# Runs the smoke test for every assignment that has one. Prints a PASS/FAIL/SKIP
-# line per assignment and returns non-zero if any assignment fails.
-#
-# Override which assignments run:
+#   bash run_all_tests.sh                 # smoke suite (passes on clean starter)
+#   RUN_FULL=1 bash run_all_tests.sh      # also run gated behavior tests
 #   ONLY="hw-shell hw-http" bash run_all_tests.sh
-# Enable full behavior tests (requires student implementations):
-#   RUN_FULL=1 bash run_all_tests.sh
+#
+# Each assignment is run via `bash <hw>/tests/run.sh` (see tests/runner.sh for
+# the case protocol). The summary table reports per-assignment totals; the
+# script exits non-zero iff any assignment had a FAILing case.
 
-set -uo pipefail
+set -u -o pipefail
 
-HERE="$(cd "$(dirname "$0")" && pwd)"
-cd "$HERE"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-DIRS=(
-  hw-intro
-  hw-list
-  hw-shell
-  hw-http
-  hw-http-rs
-  hw-memory/mm_alloc
-  hw-map-reduce
-  hw-map-reduce-rs
-  lab-rpc
-  lab-grpc-rs
-  proj-pregame
-)
+ALL_DIRS="hw-intro hw-list hw-shell hw-http hw-http-rs hw-memory \
+          hw-map-reduce hw-map-reduce-rs lab-rpc lab-grpc-rs proj-pregame"
+DIRS="${ONLY:-$ALL_DIRS}"
 
-if [ -n "${ONLY:-}" ]; then
-  read -r -a DIRS <<<"$ONLY"
-fi
+declare -A RESULT TOTALS
+overall=0
 
-PASSED=()
-FAILED=()
-SKIPPED=()
-
-for d in "${DIRS[@]}"; do
-  if [ ! -d "$d" ]; then
-    echo "[SKIP] $d (directory missing)"
-    SKIPPED+=("$d")
+for d in $DIRS; do
+  if [ ! -f "$ROOT/$d/tests/run.sh" ]; then
+    RESULT[$d]="MISSING"; TOTALS[$d]="-"
+    overall=1
     continue
   fi
-  echo
-  echo "=========================================="
-  echo "[RUN] $d"
-  echo "=========================================="
-  if make -C "$d" test; then
-    echo "[PASS] $d"
-    PASSED+=("$d")
+  out="$(mktemp)"
+  if bash "$ROOT/$d/tests/run.sh" 2>&1 | tee "$out"; then
+    RESULT[$d]="PASS"
   else
-    rc=$?
-    echo "[FAIL] $d (exit $rc)"
-    FAILED+=("$d")
+    RESULT[$d]="FAIL"; overall=1
   fi
+  TOTALS[$d]="$(grep -m1 '^#totals' "$out" | sed 's/^#totals //' || echo '-')"
+  rm -f "$out"
+  echo
 done
 
-echo
-echo "=========================================="
-echo "Summary"
-echo "=========================================="
-echo "passed:  ${#PASSED[@]}  ${PASSED[*]:-}"
-echo "failed:  ${#FAILED[@]}  ${FAILED[*]:-}"
-echo "skipped: ${#SKIPPED[@]}  ${SKIPPED[*]:-}"
-
-[ "${#FAILED[@]}" -eq 0 ]
+echo "============================ summary ============================"
+printf '%-18s %-6s %s\n' "assignment" "result" "totals"
+printf '%-18s %-6s %s\n' "----------" "------" "------"
+for d in $DIRS; do
+  printf '%-18s %-6s %s\n' "$d" "${RESULT[$d]:-?}" "${TOTALS[$d]:-}"
+done
+echo "================================================================="
+[ "$overall" -eq 0 ] && echo "ALL SUITES PASSED" || echo "SOME SUITES FAILED"
+exit "$overall"
