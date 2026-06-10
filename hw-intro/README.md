@@ -1,163 +1,131 @@
-HW 0: Intro
-===========
+# HW 0: Intro
 
-Official reference:
+Official handout: <https://cs162.org/static/hw/hw-intro/>
 
-- <https://cs162.org/static/hw/hw-intro/>
-- <https://cs162.org/static/hw/hw-intro/docs/counting-words/>
+## Introduction
 
-Assignment goals
-----------------
+This semester you will use a number of tools to submit, build, and debug your
+code. HW 0 is the CS 162 warm-up: it gets you comfortable with the course
+workspace, the C toolchain, GDB, and a small word-count program. Each later
+homework assumes you can navigate this stack without help, so it is worth
+finishing every section even if some pieces feel familiar.
 
-This homework is the CS 162 warm-up for C programming and Unix development. It
-exercises compilation with `make`, command-line tools, resource limits, memory
-layout, debugging, and a small word-count program.
+## Getting Started
 
-The word-count portion follows the official `hw-intro/words` task shape:
-implement the counting helpers, free all allocated structures, and make the
-main program handle one or more input files and command-line output modes.
-
-Key implementation areas
-------------------------
-
-- `limits.c`: inspect and print process resource limits with real values.
-- `map.c` and `recurse.c`: observe process memory layout, stack growth, heap
-  allocation, and recursive stack behavior.
-- `words/main.c`: parse flags, open input streams, combine file results, and
-  choose output format.
-- `words/word_count.c`: implement `num_words`, `count_words`, and
-  `free_words`.
-- `words/gutenberg/`: larger text inputs for manual stress checks.
-
-Build and run
--------------
+Clone your repository inside the CS 162 workspace and pull the staff starter
+code:
 
 ```sh
+cd ~/code/personal
+git pull staff main
 cd hw-intro
-make
-./limits
-./map
-
-cd words
-make
-./words -h
-./words -c words.txt
-./words -f words.txt
-./words -c gutenberg/alice.txt
 ```
 
-Current test inventory
-----------------------
+The directory contains three independent pieces:
 
-No checked-in automated test harness was found for this homework. The current
-coverage is manual smoke testing only:
+| Path        | What you edit                                            |
+| ----------- | -------------------------------------------------------- |
+| `limits.c`  | Print the calling process's resource limits.             |
+| `map.c`     | Print where stack, heap, globals, and text live.         |
+| `recurse.c` | Helper for `map.c` to observe stack growth.              |
+| `words/`    | Word-count program built on `word_count.h`.              |
 
-- Compile `limits`, `map`, and `words`.
-- Run `limits` and inspect whether the output is plausible.
-- Run `map` and inspect whether stack, heap, globals, and code addresses are
-  distinguishable.
-- Run `words` on sample files and compare output by hand.
+Build the top-level binaries from `hw-intro/`:
 
-Completeness assessment
------------------------
+```sh
+make            # builds ./limits and ./map
+./limits
+./map
+```
 
-Coverage is incomplete. The official homework expects several behaviors that
-should be asserted automatically:
+Build the word-count program from `hw-intro/words/`:
 
-- `words` should count words accurately for file input.
-- Frequency output should be deterministic enough to compare against expected
-  content after sorting if the program order is not specified.
-- Multiple input files should be processed as one combined stream.
-- Stdin behavior should work when no file path is supplied or when the chosen
-  mode expects stream input.
-- Empty files, missing files, invalid flags, punctuation, repeated words, and
-  case behavior should be tested.
-- `limits` and `map` need shape checks so placeholder or all-zero output is
-  caught early.
+```sh
+cd words
+make
+./words -c words.txt
+./words -f words.txt
+```
 
-Detailed missing-test prompts
------------------------------
+## Tasks
 
-1. Add `words/tests/basic.txt`:
+### Counting Words
 
-   ```text
-   hello hello world
-   systems world hello
-   ```
+Implement `num_words`, `count_words`, and the supporting helpers in
+`words/word_count.c`. Finish `words/main.c` so the program supports:
 
-   Add expected checks:
+- `-c, --count` — print the total number of words.
+- `-f, --frequency` — print each unique word and its count.
+- `-h, --help` — usage information.
+- One or more file arguments, or stdin when no file is supplied.
 
-   - `./words -c tests/basic.txt` should report `6` total words.
-   - `./words -f tests/basic.txt` should include `hello` with count `3`,
-     `world` with count `2`, and `systems` with count `1`.
-   - If output order can vary, normalize with `sort` before comparing.
+Free every `WordCount` you allocate. The program must not leak memory under
+`valgrind`.
 
-2. Add `words/tests/punctuation.txt`:
+### User Limits
 
-   ```text
-   Hello, hello! HELLO?
-   cs-162 cs162
-   ```
+In `limits.c`, use `getrlimit` to print the stack size, process limit, and
+maximum number of open file descriptors. The output should be human-readable.
 
-   The test should document the expected tokenizer policy. If punctuation is a
-   separator and case is preserved, check those exact tokens. If case is folded,
-   check the folded counts. This fixture prevents silent changes to token
-   parsing.
+### From Source Code to Executable
 
-3. Add `words/tests/multifile_a.txt` and `words/tests/multifile_b.txt`:
+Read the `map.c` / `recurse.c` pair and add print statements that show, for the
+running process, the addresses of:
 
-   ```text
-   alpha beta
-   ```
+- the call stack at multiple recursion depths,
+- the heap (via `malloc`),
+- a global variable in `.data`,
+- a function in `.text`.
 
-   ```text
-   beta gamma gamma
-   ```
+### GDB Basics
 
-   Test command:
+Step through `map` under `gdb` and confirm you can set breakpoints, inspect
+locals, and follow the stack across `recurse` invocations. There is no code to
+turn in here, but you will need these reflexes for every later assignment.
 
-   ```sh
-   ./words -f tests/multifile_a.txt tests/multifile_b.txt
-   ```
+## Testing
 
-   Expected content: `alpha: 1`, `beta: 2`, `gamma: 2`.
+Run the smoke tests from `hw-intro/`:
 
-4. Add stdin coverage:
+```sh
+make test
+```
 
-   ```sh
-   printf "one two one\n" | ./words -f
-   ```
+The default suite confirms that `limits` and `map` build and print plausible
+output. The `words` program is not part of the default suite because the
+starter does not compile until you implement the word-count helpers. Once your
+implementation builds, run the fuller suite:
 
-   Assert `one: 2` and `two: 1`. This catches programs that only work when
-   `fopen` succeeds on a path.
+```sh
+RUN_FULL=1 make test
+```
 
-5. Add failure-mode coverage:
+Add fixtures to `tests/fixtures/` and extend `tests/run.sh` with new
+assertions as you cover more behavior (empty input, punctuation, multi-file,
+stdin, missing files).
 
-   ```sh
-   ./words -z tests/basic.txt
-   ./words -c tests/does-not-exist.txt
-   ```
+## Submission
 
-   Assert a non-zero exit status and a useful error message on stderr.
+Push your work to your personal repository. The autograder is wired up via
+GitHub Actions; see the [Submission section of the official
+handout](https://cs162.org/static/hw/hw-intro/docs/submission/) for the
+current submission URL and deadline.
 
-6. Add `limits` sanity coverage in `hw-intro/test_intro.sh`:
+## Self-check
 
-   - Run `./limits`.
-   - Fail if the output is empty.
-   - Fail if every numeric field is `0`.
-   - Fail if expected limit names such as stack, file size, or address space are
-     missing.
+Before submitting, take a stab at these. Full answers in
+[`STUDY.md`](STUDY.md).
 
-7. Add `map` shape coverage:
+- Why does the starter `main.c` deliberately fail to build under
+  `-Werror=unused-but-set-variable`?
+- Why is `count_words` documented to return `1` on error when `main` returns
+  `0` on success?
+- What runtime feature makes the addresses printed by `./map` change every
+  invocation, and what flag stabilizes them?
+- Why do you have to lower-case each character *before* `add_word`, not
+  after?
 
-   - Run `./map`.
-   - Assert that it prints labels for stack, heap, globals, and code/text.
-   - Assert that address-looking values are present.
-   - Avoid hard-coding exact addresses because ASLR makes them unstable.
+## References
 
-Suggested `make test` target
-----------------------------
-
-Add a `test` target that calls a script such as `tests/run_hw_intro_tests.sh`.
-That script should rebuild the homework, run the fixture tests, normalize output
-where needed, and return a non-zero exit status on the first failure.
+- Official handout: <https://cs162.org/static/hw/hw-intro/>
+- Counting Words page: <https://cs162.org/static/hw/hw-intro/docs/counting-words/>

@@ -1,97 +1,110 @@
-CS 162 Student Repository
-=========================
+# CS 162 Student Repository
 
-This repository contains code for the CS 162 individual homework assignments.
-The documentation in each homework directory is written in an assignment-report
-style and aligned with the public CS 162 homework pages.
+This repository contains the individual homework assignments, labs, and
+project 0 for CS 162. Each subdirectory has a handout-style `README.md`
+mirroring the layout used on <https://cs162.org>, and a `make test` target
+that runs a small smoke suite.
 
-Documentation index
--------------------
+## Assignments
 
-- [`hw-intro`](hw-intro/README.md): HW 0, C tools, user limits, memory layout,
-  GDB basics, and word counting.
-- [`hw-list`](hw-list/README.md): HW 1, Pintos lists, pthread practice, and
-  threaded word counting.
-- [`hw-shell`](hw-shell/README.md): HW 2, directory commands, program
-  execution, path resolution, redirection, pipes, and signal handling.
-- [`hw-http`](hw-http/README.md): HW 3 C HTTP server, socket setup, GET
-  handling, proxying, server variants, and performance.
-- [`hw-http-rs`](hw-http-rs/README.md): HW 3 Rust HTTP server, socket handling,
-  GET parsing, directory responses, and statistics.
-- [`hw-memory`](hw-memory/README.md): HW 4, Pintos `sbrk`, user heap growth,
-  and user-space allocation library functions.
-- [`hw-map-reduce`](hw-map-reduce/README.md): HW 5 C MapReduce coordinator,
-  worker, client, task scheduling, and fault tolerance.
-- [`hw-map-reduce-rs`](hw-map-reduce-rs/README.md): HW 5 Rust MapReduce
-  coordinator, worker registration, task distribution, and fault tolerance.
+| Directory              | Handout                                                   |
+| ---------------------- | --------------------------------------------------------- |
+| `hw-intro/`            | <https://cs162.org/static/hw/hw-intro/>                   |
+| `hw-list/`             | <https://cs162.org/static/hw/hw-list/>                    |
+| `hw-shell/`            | <https://cs162.org/static/hw/hw-shell/>                   |
+| `hw-http/`             | <https://cs162.org/static/hw/hw-http/>                    |
+| `hw-http-rs/`          | <https://cs162.org/static/hw/hw-http-rs/>                 |
+| `hw-memory/`           | <https://cs162.org/static/hw/hw-memory/>                  |
+| `hw-map-reduce/`       | <https://cs162.org/static/hw/hw-map-reduce/>              |
+| `hw-map-reduce-rs/`    | <https://cs162.org/static/hw/hw-map-reduce-rs/>           |
+| `lab-rpc/`             | <https://cs162.org/static/hw/lab-rpc/>                    |
+| `lab-grpc-rs/`         | <https://cs162.org/static/hw/lab-grpc-rs/>                |
+| `proj-pregame/`        | <https://cs162.org/static/proj/proj-pregame/>             |
 
-Enhanced guides and validation reports
---------------------------------------
+## Running the tests
 
-Additional English documentation lives in
+The repository-level driver runs every assignment's smoke test in order:
+
+```sh
+make test            # smoke suite — passes on the unmodified starter
+make test-full       # also runs behavior tests (requires student impls)
+```
+
+Equivalently:
+
+```sh
+bash run_all_tests.sh
+RUN_FULL=1 bash run_all_tests.sh
+ONLY="hw-shell hw-http" bash run_all_tests.sh
+```
+
+Per-assignment:
+
+```sh
+cd <hw> && make test
+```
+
+What "smoke" means here:
+
+- C assignments: every binary in the directory links, runs without
+  crashing, and prints something plausible.
+- Rust crates: `cargo test --test smoke` passes, which proves the crate
+  builds and the CLI binaries respond to `--help`.
+- Pintos pieces (`hw-memory`, `proj-pregame`): the kernel source compiles
+  on a host with the i386 toolchain. The full Pintos `make check` suites
+  are documented in each handout but are not part of `make test` because
+  they require QEMU and a working autograder image.
+
+The behavior tests (`RUN_FULL=1`) only pass once you have implemented the
+required tasks. Each `tests/run.sh` describes which assertions are gated.
+
+## Understanding checks
+
+Each assignment ships with a short `STUDY.md` of conceptual questions plus
+an inline **Self-check** section at the bottom of its `README.md`. The
+questions are written by the maintainers of this repo (not by the CS 162
+staff) and are intended as a pre-submission gut-check. Every answer is
+behind a `<details>` toggle so you can write your own first.
+
+```
+hw-*/STUDY.md, lab-*/STUDY.md, proj-pregame/STUDY.md
+```
+
+## Learn to write the tests yourself
+
+The `tests/run.sh` and `tests/smoke.rs` files in each assignment are
+*scaffolding*. To turn them into the full test suite the testing-guide
+describes, follow:
+
+1. **[`docs/testing-tutorial.md`](docs/testing-tutorial.md)** — the
+   reusable techniques: fixtures, golden files, output normalization,
+   timeouts, cleanup traps, server readiness, race detection,
+   memcheck, pty-driven signals, skipping cleanly, TDD order.
+2. **`<hw>/TESTING.md`** — a per-assignment recipe that applies those
+   techniques in order. Each file has a feature → test map, a
+   step-by-step recipe, a "try it yourself" section (no answers), and
+   a common-pitfalls checklist.
+
+The tutorial gives you the vocabulary once; the per-HW files send you
+to the right exercise.
+
+## Long-form guides
+
+Additional documentation lives in
 [`docs/cs162-homework-guides`](docs/cs162-homework-guides/README.md):
 
-- `testing-guide.md`: how to design complete test cases for each homework.
-- `validation-report.md`: what was actually built and run locally after the
-  WSL toolchain was installed.
+- `testing-guide.md` — how to design a complete test suite per homework.
+- `validation-report.md` — local validation pass on a WSL workspace.
 
-These guides are Markdown-only. Generated PDFs, HTML exports, scratch test
-scripts, and scratch implementation changes are intentionally not tracked.
+These guides go deeper than the per-assignment `README.md` files and are a
+good source of ideas when extending each `tests/run.sh`.
 
-Source alignment
-----------------
+## Repository layout
 
-The homework summaries and test expectations are based on the current public
-CS 162 pages:
-
-- <https://cs162.org/static/hw/hw-intro/>
-- <https://cs162.org/static/hw/hw-list/>
-- <https://cs162.org/static/hw/hw-shell/>
-- <https://cs162.org/static/hw/hw-http/>
-- <https://cs162.org/static/hw/hw-http-rs/>
-- <https://cs162.org/static/hw/hw-memory/>
-- <https://cs162.org/static/hw/hw-map-reduce/>
-- <https://cs162.org/static/hw/hw-map-reduce-rs/>
-
-Repository-wide test audit
---------------------------
-
-This repository does not currently have complete local automated testing for
-every homework. The report below describes the state of the repository, not the
-official course autograder. A disposable scratch copy was used to complete and
-test representative implementations without changing the tracked homework
-source code. See
-[`validation-report.md`](docs/cs162-homework-guides/validation-report.md) for
-the exact commands and results.
-
-Current coverage:
-
-- `hw-memory/pintos/src/tests/memory/Make.tests` is the strongest test suite in
-  this repository. It enables 26 active Pintos memory tests covering `sbrk`,
-  `malloc`, `free`, and `realloc` behavior. `calloc` still deserves explicit
-  additional coverage.
-- `hw-http-rs/src/tests/` has helper-level Rust tests for argument defaults,
-  MIME type helpers, response helpers, and statistics.
-- `hw-shell/test.sh` is a small smoke test for one built-in command and one
-  external command.
-- `hw-memory/mm_alloc/mm_test.c` is a minimal allocator smoke test.
-- `hw-map-reduce-rs/src/tests/mod.rs` contains an ignored `test_wc` with a
-  placeholder input path, so default `cargo test` does not validate a full
-  MapReduce run.
-
-Major missing coverage:
-
-- `hw-intro`, `hw-list`, `hw-http`, and `hw-map-reduce` need checked-in test
-  harnesses with deterministic fixtures and golden outputs.
-- `hw-shell` needs tests for the full CS 162 shell surface: `cd`, `pwd`,
-  external program execution, path resolution, redirection, pipes, Ctrl-D,
-  Ctrl-C, and Ctrl-Z behavior.
-- `hw-http` and `hw-http-rs` need real server integration tests that send HTTP
-  requests over sockets and assert status lines, headers, bodies, directory
-  responses, malformed requests, and concurrent clients.
-- `hw-map-reduce` and `hw-map-reduce-rs` need integration tests that start a
-  coordinator, start workers, submit jobs, compare output to golden files, and
-  validate retry behavior after worker failure.
-
-Each homework README gives detailed prompts for the exact tests that should be
-added next.
+```
+student0/
+├── Makefile              # repo-level `make test` / `make clean`
+├── run_all_tests.sh      # driver that walks every assignment
+├── hw-*, lab-*, proj-*/  # each has README.md + tests/
+└── docs/                 # long-form testing and validation guides
+```

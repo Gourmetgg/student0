@@ -1,140 +1,117 @@
-HW 1: Lists
-===========
+# HW 1: List
 
-Official reference:
+Official handout: <https://cs162.org/static/hw/hw-list/>
 
-- <https://cs162.org/static/hw/hw-list/>
-- <https://cs162.org/static/hw/hw-list/docs/pwords/>
+## Introduction
 
-Assignment goals
-----------------
+HW 1 introduces threads and processes from the perspective of a user-space
+program. You will reuse the word-count problem from HW 0 and add two new
+backends:
 
-This homework introduces the Pintos intrusive linked-list implementation and
-uses it in a word-count program. It also introduces basic pthread programming:
-the `pwords` executable should spawn worker threads, process input files in
-parallel, and wait for all workers before printing the final result.
+- `lwords` — word counting backed by the **Pintos intrusive list** API. This
+  is the same `list.c` / `list.h` you will see later in the kernel projects.
+- `pwords` — multi-threaded word counting that spawns one worker thread per
+  input file and merges their results safely.
 
-Key implementation areas
-------------------------
+Both must produce the same final output as the reference `words` binary.
 
-- `list.c` and `list.h`: Pintos list primitives and ownership conventions.
-- `word_count_l.c`: list-backed word-count storage.
-- `word_count_p.c`: thread-aware word-count storage and synchronization.
-- `pwords.c`: create one thread per input file and join every spawned thread.
-- `pthread.c`: smaller pthread practice program.
-- `gutenberg/`: larger input files for comparison and stress testing.
-
-Build and run
--------------
+## Getting Started
 
 ```sh
+cd ~/code/personal
+git pull staff main
 cd hw-list
 make
-./pthread 4
-./words gutenberg/alice.txt
-./lwords gutenberg/alice.txt
-./pwords gutenberg/alice.txt gutenberg/sawyer.txt
 ```
 
-Manual comparison:
+`make` builds four executables:
+
+| Binary    | Source you must finish                                   |
+| --------- | -------------------------------------------------------- |
+| `pthread` | `pthread.c` — small pthread practice program.            |
+| `words`   | Reference single-threaded build (precompiled helpers).   |
+| `lwords`  | `word_count_l.c` — list-backed `WordCount` storage.      |
+| `pwords`  | `word_count_p.c`, `pwords.c` — thread-safe + driver.     |
+
+You should **not** modify `list.h`, `list.c`, or `word_count.h`. The
+precompiled `*.o` files in this directory implement the parts of HW 0 that
+are reused; do not delete them.
+
+## Tasks
+
+### Pthread Practice
+
+Finish `pthread.c` so `./pthread N` spawns `N` worker threads, prints each
+thread's stack address relative to `main`'s, and joins every worker before
+exiting. Use this exercise to convince yourself that stacks are per-thread and
+the heap is shared.
+
+### List-Backed Word Count
+
+Implement `init_words`, `add_word`, `len_words`, `find_word`, and the
+comparator inside `word_count_l.c`. The storage is a Pintos `struct list`
+held inside each `WordCount`; use the list macros (`list_init`,
+`list_push_back`, `list_entry`, `list_sort`, ...) rather than rolling your
+own linked list.
+
+When you run
 
 ```sh
-./words gutenberg/alice.txt > /tmp/words.out
-./lwords gutenberg/alice.txt > /tmp/lwords.out
-./pwords gutenberg/alice.txt > /tmp/pwords.out
-diff -u /tmp/words.out /tmp/lwords.out
-diff -u /tmp/words.out /tmp/pwords.out
+./lwords gutenberg/alice.txt
+./lwords gutenberg/alice.txt gutenberg/sawyer.txt
 ```
 
-Current test inventory
-----------------------
+the output must match `./words` on the same inputs byte-for-byte.
 
-No checked-in automated test harness was found for this homework. The current
-manual checks compare the reference `words` program against `lwords` and
-`pwords` on larger text files.
+### Threaded Word Count
 
-Completeness assessment
------------------------
+In `word_count_p.c`, add a `pthread_mutex_t` (or equivalent) to `WordCount`
+so multiple workers can call `add_word` on the same list without losing
+updates. In `pwords.c`, spawn one thread per command-line file, have each
+thread parse its file and update the shared structure, then `pthread_join`
+every worker before printing the final tally.
 
-Coverage is incomplete. The official homework centers on data-structure
-correctness and thread correctness, so tests should cover both deterministic
-word-count behavior and race-prone parallel behavior:
+`./pwords file1 file2` must equal `./words file1 file2` over repeated runs.
 
-- `lwords` should match the reference output for all fixtures.
-- `pwords` should match the reference output for one file and many files.
-- The main `pwords` thread should always join workers before output.
-- Shared word-count state should not lose increments under concurrent updates.
-- List nodes should be inserted, searched, sorted, and freed without leaks.
+## Testing
 
-Detailed missing-test prompts
------------------------------
+```sh
+make test
+```
 
-1. Add deterministic fixtures under `tests/fixtures/`:
+The default suite confirms the binaries link, `pthread` runs, and the
+reference `words` binary still works on a small fixture. Comparison tests
+that pit `lwords` and `pwords` against `words` are gated behind `RUN_FULL=1`
+because they require your implementation:
 
-   - `empty.txt`: empty file.
-   - `single.txt`: `alpha beta alpha`.
-   - `case_punctuation.txt`: `Apple apple, APPLE!`
-   - `many.txt`: repeat 100 to 1,000 words with known counts.
+```sh
+RUN_FULL=1 make test
+```
 
-   For every fixture, run:
+For concurrency stress, repeat the `pwords` invocation under a loop and use
+`valgrind --tool=helgrind` to catch missing locks.
 
-   ```sh
-   ./words tests/fixtures/single.txt > /tmp/ref.out
-   ./lwords tests/fixtures/single.txt > /tmp/lwords.out
-   ./pwords tests/fixtures/single.txt > /tmp/pwords.out
-   diff -u /tmp/ref.out /tmp/lwords.out
-   diff -u /tmp/ref.out /tmp/pwords.out
-   ```
+## Submission
 
-2. Add multi-file `pwords` coverage:
+Push to your personal repository; the autograder runs from `hw-list/`. The
+official deliverable is the three sources you wrote (`word_count_l.c`,
+`word_count_p.c`, `pwords.c`); do not commit binaries.
 
-   ```sh
-   ./words tests/fixtures/a.txt tests/fixtures/b.txt > /tmp/ref.out
-   ./pwords tests/fixtures/a.txt tests/fixtures/b.txt > /tmp/pwords.out
-   diff -u /tmp/ref.out /tmp/pwords.out
-   ```
+## Self-check
 
-   The fixture should include the same word in both files so lost increments are
-   visible.
+Before submitting, take a stab at these. Full answers in
+[`STUDY.md`](STUDY.md).
 
-3. Add a repeated race test:
+- Why is an *intrusive* linked list (Pintos style) often preferred over a
+  generic `std::list<T>`-style container?
+- Sketch the exact interleaving by which two un-synchronized `add_word`
+  callers can both insert the same key.
+- Why does the autograder insist you not modify `list.h`, `list.c`, or
+  `word_count.h`?
+- Helgrind reports a race in `pwords` but the output looks correct. Should
+  you fix it?
 
-   ```sh
-   for i in $(seq 1 100); do
-     ./pwords tests/fixtures/many.txt tests/fixtures/many.txt > /tmp/run.out
-     diff -u /tmp/expected_twice.out /tmp/run.out
-   done
-   ```
+## References
 
-   This catches missing locks, early printing before joins, and shared-list
-   corruption that only appears intermittently.
-
-4. Add argument and failure tests:
-
-   - `./pwords` with no input should follow the documented behavior.
-   - `./pwords tests/fixtures/missing.txt` should return non-zero and print a
-     useful error.
-   - A mix of valid and invalid files should not leak threads or hang.
-
-5. Add memory-check instructions:
-
-   ```sh
-   valgrind --leak-check=full ./lwords tests/fixtures/many.txt
-   valgrind --leak-check=full ./pwords tests/fixtures/many.txt tests/fixtures/many.txt
-   ```
-
-   These checks should confirm that list entries and word strings are released
-   exactly once.
-
-6. Add targeted list-unit tests if a small harness is acceptable:
-
-   - Insert several entries and confirm list order.
-   - Search for present and absent words.
-   - Increment an existing word without inserting a duplicate.
-   - Free a non-empty list and an empty list.
-
-Suggested `make test` target
-----------------------------
-
-Add `make test` to rebuild the executables, run the fixture comparison script,
-and optionally run the repeated race loop when `STRESS=1` is set.
+- Official handout: <https://cs162.org/static/hw/hw-list/>
+- pwords page: <https://cs162.org/static/hw/hw-list/docs/pwords/>

@@ -1,164 +1,116 @@
-HW 3: HTTP Server in Rust
-=========================
+# HW 3: HTTP Server (Rust)
 
-Official reference:
+Official handout: <https://cs162.org/static/hw/hw-http-rs/>
 
-- <https://cs162.org/static/hw/hw-http-rs/>
-- <https://cs162.org/static/hw/hw-http-rs/docs/requests/>
+## Introduction
 
-Assignment goals
-----------------
+This homework mirrors HW 3 (C) using Rust and async I/O. You will build an
+HTTP/1.0 server with the Tokio runtime that parses `GET` requests, serves
+files and directory listings, and tracks per-status-code statistics shared
+across tasks. The handout is organised around the same task list as the C
+version (sockets → request parsing → directory handling → stats) but the
+focus shifts toward correct use of `tokio::net`, `tokio::fs`, and
+`tokio::sync` primitives instead of `pthread` and raw `read`/`write`.
 
-This homework implements the CS 162 HTTP server in Rust. It mirrors the C HTTP
-homework while using Rust libraries and async I/O. The official task set covers
-argument parsing, socket handling, request parsing, `GET` responses, directory
-handling, response-code statistics, and performance-oriented testing.
+## Getting Started
 
-Key implementation areas
-------------------------
-
-- `src/main.rs`: binary entry point and server startup.
-- `src/args.rs`: command-line argument parsing.
-- `src/http.rs`: response formatting, headers, status lines, and MIME helpers.
-- `src/server.rs`: socket accept loop and request handling.
-- `src/stats.rs`: shared response-code counters.
-- `src/tests/`: current helper-level Rust tests.
-- `www/`: static file tree for manual server testing.
-
-Build and run
--------------
+Rust development is much faster locally than inside the course Docker. Make
+sure the workspace has `cargo` from `rustup`; the crate pins itself to
+`1.66.1` via `rust-toolchain.toml`.
 
 ```sh
+cd ~/code/personal
+git pull staff main
 cd hw-http-rs
 cargo build
-cargo test
 cargo run -- --files www --port 8000
 ```
 
-From another terminal:
+Layout:
+
+| Path            | Role                                                  |
+| --------------- | ----------------------------------------------------- |
+| `src/main.rs`   | Binary entry point.                                   |
+| `src/args.rs`   | clap-based CLI parsing.                               |
+| `src/http.rs`   | Status lines, headers, MIME lookup, response writers. |
+| `src/server.rs` | Async listener and per-connection handler.            |
+| `src/stats.rs`  | Shared response-code counters.                        |
+| `src/tests/`    | Unit tests for the helpers above.                     |
+| `www/`          | Static files used for manual testing.                 |
+
+## Tasks
+
+### Background and Rust
+
+Skim the handout's Rust crash-course pages. You will use `tokio::spawn`,
+`Arc<Mutex<...>>`, and `?`-style error propagation throughout.
+
+### Socket
+
+Bind a `TcpListener` on the requested port, accept in a loop, and spawn a
+Tokio task per connection. Each task owns its `TcpStream` and runs the
+request handler.
+
+### GET requests
+
+Implement `parse_request` in `http.rs`. Reject anything that is not a
+well-formed `GET` request line; return an `Err` on partial or malformed
+input. In `server.rs`, dispatch on the parsed path: file → `200 OK`,
+directory containing `index.html` → that file, other directory → generated
+listing, missing path → `404 Not Found`.
+
+### MIME types
+
+Finish `get_mime_type` so common extensions (`.html`, `.css`, `.js`,
+`.png`, `.jpg`, `.txt`, ...) map to standard types; everything else falls
+back to `application/octet-stream`.
+
+### Statistics
+
+Make `Stats` thread-safe (wrap with `Mutex` or use atomics) and have
+`server.rs` call `Stats::incr` for every response status code. Expose
+`items()` sorted by status code so the test suite can assert deterministic
+output.
+
+## Testing
 
 ```sh
-curl -i http://127.0.0.1:8000/
-curl -i http://127.0.0.1:8000/my_documents/wholesome_facts.txt
-curl -i http://127.0.0.1:8000/not-found
+make test           # runs the integration smoke test
+cargo test          # also runs src/tests/* unit tests
 ```
 
-Current test inventory
-----------------------
+`make test` invokes `cargo test --test smoke`, which builds the binary and
+asserts `--help` returns cleanly — this passes on the unmodified starter and
+is what the repo-level `run_all_tests.sh` runs.
 
-The repository currently has helper-level Rust tests in `src/tests/`:
+The full `cargo test` includes the helper-level unit tests for `args`,
+`http`, and `stats`. Several of those tests panic on `todo!()` until you
+finish the implementation; they are designed to walk you through each task in
+order.
 
-- `args.rs`: default argument behavior and manual construction.
-- `http.rs`: MIME type helpers and response helper formatting.
-- `stats.rs`: counter initialization, increments, sorted output, debug
-  formatting, and shared stats updates.
+For end-to-end coverage, start the server on `127.0.0.1:0` from an
+integration test and use `reqwest` or `tokio::net::TcpStream` to assert
+status codes, headers, and body bytes.
 
-These tests are useful, but they do not start the server or send real HTTP
-requests.
+## Submission
 
-Completeness assessment
------------------------
+Push the `hw-http-rs/` directory to your personal repository. The autograder
+runs `cargo test` and the staff integration tests.
 
-Coverage is partial. The helper tests protect small functions, but the main
-assignment behavior lives at the socket and request-handler boundary.
+## Self-check
 
-Missing coverage includes:
+Before submitting, take a stab at these. Full answers in
+[`STUDY.md`](STUDY.md).
 
-- `parse_request` behavior for valid, invalid, partial, and unsupported
-  requests.
-- Real file serving over TCP.
-- Directory responses.
-- Missing-file and forbidden-path behavior.
-- Header and body correctness for real responses.
-- Response-code statistics after real requests.
-- Concurrent clients.
-- Graceful handling of malformed clients that disconnect early.
+- What is the runtime difference between a Tokio task and an OS thread, and
+  why does it matter for a webserver?
+- Why is `Arc<Mutex<Stats>>` the standard idiom and why does
+  `Rc<RefCell<Stats>>` fail to compile here?
+- The crate sets `panic = 'abort'`. What does that change about how a
+  panicking task affects the rest of the server?
+- Why does `#[tokio::test]` exist — wouldn't `#[test] async fn ...` work?
 
-Detailed missing-test prompts
------------------------------
+## References
 
-1. Add request-parser unit tests:
-
-   In `src/tests/http.rs` or a new `src/tests/requests.rs`, create cases for:
-
-   - `GET /index.html HTTP/1.0\r\n\r\n`
-   - `GET / HTTP/1.1\r\nHost: localhost\r\n\r\n`
-   - `POST / HTTP/1.0\r\n\r\n`
-   - Empty input.
-   - A request line with too few fields.
-   - A path containing `..`.
-
-   Assert the exact parsed method, path, and error type expected by the
-   implementation.
-
-2. Add a Tokio integration test under `tests/server_integration.rs`:
-
-   - Create a temporary directory.
-   - Write `index.html` and another small file.
-   - Bind the server to port `0` or otherwise allocate a free port.
-   - Connect with `tokio::net::TcpStream`.
-   - Send a raw HTTP request.
-   - Read the full response and assert status line, headers, and body.
-
-3. Add real `GET` response checks:
-
-   ```text
-   GET /index.html HTTP/1.0\r\n\r\n
-   ```
-
-   Assert:
-
-   - Status contains `200`.
-   - `Content-Length` equals the fixture byte length.
-   - `Content-Type` matches the extension.
-   - Body equals the file contents.
-
-4. Add missing-file and traversal checks:
-
-   ```text
-   GET /missing.txt HTTP/1.0\r\n\r\n
-   GET /../Cargo.toml HTTP/1.0\r\n\r\n
-   ```
-
-   Assert that missing files return the documented not-found status and that
-   traversal attempts do not expose files outside the configured root.
-
-5. Add directory checks:
-
-   - Request `/`.
-   - Assert either the configured index file or directory listing behavior,
-     depending on the implementation path required by the assignment.
-   - Request a nested directory fixture and assert stable output.
-
-6. Add stats integration checks:
-
-   - Send two successful requests and one missing-file request.
-   - Query or inspect the shared `Stats` object if the server exposes it.
-   - Assert the `200` and `404` counters changed by the expected amounts.
-
-7. Add concurrent-client coverage:
-
-   ```rust
-   let requests = (0..50).map(|_| tokio::spawn(send_get(port, "/index.html")));
-   ```
-
-   Await all tasks and assert every response is successful. This catches
-   accidental shared-state locks held too long and request-handler panics.
-
-8. Add disconnect and partial-request coverage:
-
-   - Open a TCP connection and close it without sending a full request.
-   - Send `GET / HTTP/1.0\r\n` without the terminating blank line.
-   - Assert the server does not panic and still accepts a later valid request.
-
-Suggested commands
-------------------
-
-```sh
-cargo test
-cargo test --test server_integration
-cargo test -- --nocapture
-```
-
-Keep fast parser/helper tests in the default suite, and keep slower concurrent
-server tests in integration tests so they can be isolated when debugging.
+- Official handout: <https://cs162.org/static/hw/hw-http-rs/>
+- Request page: <https://cs162.org/static/hw/hw-http-rs/docs/requests/>

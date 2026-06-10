@@ -19,3 +19,7 @@ limits: limits.c
 
 clean:
 	rm -f $(BINARIES)
+
+.PHONY: test
+test: $(BINARIES)
+	bash tests/run.sh

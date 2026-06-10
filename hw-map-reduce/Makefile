@@ -75,3 +75,7 @@ $(CLIENT) : $(OBJECTS_CLIENT) $(BIN_DIR)
 clean:
 	$(RM) core $(TARGETS) $(OBJECTS_WORKER) $(OBJECTS_COORDINATOR) $(OBJECTS_CLIENT) $(WORKER) $(COORDINATOR) $(CLIENT)
 
+.PHONY: test
+test: all
+	bash tests/run.sh
+

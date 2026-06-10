@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS=-g3 -pthread -Wall -std=gnu99
 LDFLAGS=-pthread
 
-.PHONY: all clean
+.PHONY: all clean test
 
 all: $(EXECUTABLES)
 
@@ -44,3 +44,6 @@ clean:
 	rm -f $(EXECUTABLES) *.o
 	cp $${tmp_dir}/*.o ./
 	rm -r $$tmp_dir
+
+test: all
+	bash tests/run.sh

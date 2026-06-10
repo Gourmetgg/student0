@@ -16,3 +16,7 @@ $(EXECUTABLES): $(OBJS)
 
 clean:
 	rm -rf $(EXECUTABLES) $(OBJS)
+
+.PHONY: test
+test: $(EXECUTABLES)
+	bash tests/run.sh

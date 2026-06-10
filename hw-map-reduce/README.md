@@ -1,180 +1,125 @@
-HW 5: MapReduce in C
-====================
+# HW 5: MapReduce (C)
 
-Official reference:
+Official handout: <https://cs162.org/static/hw/hw-map-reduce/>
 
-- <https://cs162.org/static/hw/hw-map-reduce/>
-- <https://cs162.org/static/hw/hw-map-reduce/docs/job-submission/>
+## Introduction
 
-Assignment goals
-----------------
+MapReduce is a programming model for scalable, parallel data processing. In
+HW 5 you build a fault-tolerant MapReduce system in C: a **coordinator** that
+distributes work, a pool of **workers** that execute map and reduce tasks,
+and a **client** that submits jobs and post-processes the final output. The
+coordinator must handle worker registration, hand out tasks in dependency
+order (maps before reduces), track per-task state, and re-issue work when a
+worker disappears.
 
-This homework implements a distributed MapReduce system in C. The official CS
-162 task set covers job submission, worker registration, task distribution,
-worker heartbeats, task completion, fault tolerance, and output processing.
+The assignment is graded in three pieces with separate deadlines:
 
-The coordinator should maintain durable job and task state, workers should
-request and execute tasks, and the client should submit jobs and process final
-outputs from sample applications.
+| Piece              | Weight | What you submit                            |
+| ------------------ | ------ | ------------------------------------------ |
+| RPC Lab (lab-rpc)  | 5%     | Working ECHO / PUT / GET via `rpcgen`.     |
+| Checkpoint         | 5%     | Up through the Tasks section of the spec.  |
+| Final              | 90%    | Full system including fault tolerance.     |
 
-Key implementation areas
-------------------------
+Slip days apply; there are no other extensions.
 
-- `rpc/rpc.x`: RPC interface shared by coordinator, worker, and client.
-- `coordinator/coordinator.c`: RPC service entry points and scheduler logic.
-- `coordinator/job.c`: job metadata, task state, queues, and transitions.
-- `worker/worker.c`: worker registration, polling, heartbeat, and task loop.
-- `worker/task_handler.c`: map and reduce task execution.
-- `client/client.c`: job submission, polling, and output processing.
-- `app/wc/`, `app/grep/`, `app/vertex_degree/`: sample MapReduce apps.
-- `data/`: sample input data.
-
-Build and run
--------------
+## Getting Started
 
 ```sh
+cd ~/code/personal
+git pull staff main
 cd hw-map-reduce
 make
 ```
 
-Manual three-terminal smoke test:
+Layout:
 
-Terminal 1:
+| Path                  | Role                                           |
+| --------------------- | ---------------------------------------------- |
+| `rpc/rpc.x`           | Shared RPC interface (`rpcgen` source).        |
+| `coordinator/`        | `coordinator.c` (RPC entry points), `job.c`.   |
+| `worker/`             | `worker.c` (loop), `task_handler.c` (execute). |
+| `client/client.c`     | `submit` and `process` commands.               |
+| `app/{wc,grep,vertex_degree}/` | Sample MapReduce apps.              |
+| `data/`               | Sample inputs.                                 |
+
+Run the three binaries from three terminals (or `tmux` panes):
 
 ```sh
 ./bin/mr-coordinator
-```
-
-Terminal 2:
-
-```sh
 ./bin/mr-worker
+./bin/mr-client submit -a wc -n 2 -o /tmp/mr-out -w data/gutenberg/p.txt
+./bin/mr-client process -a wc -n 2 -o /tmp/mr-out
 ```
 
-Terminal 3:
+## Tasks
+
+### Job Submission
+
+In `coordinator.c`, accept `submit` requests, allocate a `Job` (see
+`coordinator/job.h`), persist task metadata, and respond with a job ID.
+
+### Worker Registration and Tasks
+
+On the worker side, register with the coordinator on startup, poll for work,
+execute the assigned map or reduce, and report completion (or failure). On
+the coordinator side, hand out map tasks before any reduce tasks, and only
+schedule a reduce when its input partition is fully populated.
+
+### Output Processing
+
+The client `process` command merges the per-reduce output files into the
+final order the spec dictates. `app/<name>/<name>.c` defines the map / reduce
+callbacks and the post-processing format.
+
+### Fault Tolerance (Final)
+
+Track per-worker heartbeats. If a worker misses several heartbeats, mark its
+in-flight task `failed`, requeue it, and continue. After a configurable
+retry count, mark the job as failed and report that to the client.
+
+## Testing
 
 ```sh
-rm -rf /tmp/hw-map-reduce-out
-mkdir -p /tmp/hw-map-reduce-out
-./bin/mr-client submit -a wc -o /tmp/hw-map-reduce-out -w data/gutenberg/p.txt
-./bin/mr-client process -a wc -o /tmp/hw-map-reduce-out
+make test
 ```
 
-Current test inventory
-----------------------
+The default suite confirms that `rpcgen` produced stubs, the three binaries
+link, and the client does not hang on bad input. End-to-end coverage that
+starts a coordinator + worker and submits a real `wc` job is gated behind
+`RUN_FULL=1` because it requires the RPC plumbing to actually work plus a
+running `rpcbind` daemon:
 
-No checked-in automated harness was found for the C MapReduce implementation.
-The current coverage is manual cluster execution only.
+```sh
+sudo service rpcbind start
+RUN_FULL=1 make test
+```
 
-Completeness assessment
------------------------
+For deeper coverage, extend `tests/run.sh` to (1) submit the three sample
+apps (`wc`, `grep`, `vertex_degree`), (2) compare output to checked-in
+golden files, and (3) kill a worker mid-task to exercise the retry path.
 
-Coverage is incomplete. MapReduce correctness depends on multi-process
-coordination, so the important tests must start real coordinator and worker
-processes, submit real jobs, and compare output against golden files.
+## Submission
 
-Missing coverage includes:
+Push `hw-map-reduce/` to your personal repository on the relevant deadline.
+The checkpoint must be triggered manually from the autograder UI; the final
+submission auto-runs from the standard CI flow. See the [Submission
+page](https://cs162.org/static/hw/hw-map-reduce/docs/submission/) for the
+current cut-offs.
 
-- Job IDs are unique and start from the expected value.
-- Job submission deeply copies input paths, output paths, app names, and app
-  arguments.
-- Output directories are created when missing.
-- Map and reduce tasks are initialized as not started.
-- Workers receive unique IDs.
-- Multiple workers share tasks without duplicate ownership.
-- Completed tasks advance job state correctly.
-- Worker failure causes task retry.
-- Sample apps produce deterministic output.
-- Invalid job submissions fail cleanly.
+## Self-check
 
-Detailed missing-test prompts
------------------------------
+Before submitting, take a stab at these. Full answers in
+[`STUDY.md`](STUDY.md).
 
-1. Add `tests/run_cluster_test.sh`:
+- Why must every map task complete before any reduce task is dispatched?
+- What goes wrong if two workers use different hash functions to partition
+  map output?
+- Why is "re-issue in-flight tasks" correct on worker failure but
+  "re-execute completed tasks" *not*?
+- Why should the worker's heartbeat thread use a separate RPC connection
+  from its task thread?
 
-   - Build with `make`.
-   - Create a temporary output directory.
-   - Start `./bin/mr-coordinator` in the background.
-   - Start one or more `./bin/mr-worker` processes.
-   - Submit a job.
-   - Poll until completion.
-   - Run `mr-client process`.
-   - Compare processed output against a golden file.
-   - Clean up all background processes in a `trap`.
+## References
 
-   Process cleanup is essential because failed MapReduce tests otherwise leave
-   coordinators or workers running on the host.
-
-2. Add word-count golden coverage:
-
-   Create `tests/fixtures/wc_input.txt`:
-
-   ```text
-   alpha beta alpha
-   beta gamma
-   ```
-
-   Expected processed output should include:
-
-   ```text
-   alpha 2
-   beta 2
-   gamma 1
-   ```
-
-   Sort output before comparison if reducer output order is not guaranteed.
-
-3. Add multi-file job coverage:
-
-   Submit one job with two or more `-w` input files. Put overlapping words in
-   multiple files so the reduce step must combine mapper outputs correctly.
-
-4. Add multiple-worker coverage:
-
-   Start three workers and submit a job with enough map tasks to distribute.
-   Assert the job completes and output matches the single-worker golden result.
-   This catches coordinator state bugs that only appear with concurrent worker
-   requests.
-
-5. Add worker-failure coverage:
-
-   - Start the coordinator and two workers.
-   - Submit a job with multiple tasks.
-   - Kill one worker while the job is running.
-   - Assert the coordinator marks its in-progress task available again.
-   - Assert the final output still matches the golden result.
-
-6. Add invalid submission tests:
-
-   - Unknown app name.
-   - Missing input file.
-   - Output path that cannot be created.
-   - Invalid reducer count if the client exposes that option.
-
-   Each should return a failure status without crashing the coordinator.
-
-7. Add coordinator-state unit tests if internal functions are linkable:
-
-   - Submitting the first job returns ID `0`.
-   - Submitting a second job returns ID `1`.
-   - Newly submitted jobs have all map and reduce tasks in `NOT_STARTED`.
-   - Deep-copied strings remain valid after the request object is freed.
-   - Output directory creation is attempted exactly once.
-
-8. Add sample-app coverage:
-
-   - `wc`: compare against a small word-count golden file.
-   - `grep`: use a fixture where only known lines match.
-   - `vertex_degree`: use a tiny graph with known degrees.
-
-9. Add timeout protection:
-
-   Every integration test should fail after a fixed timeout, for example 30
-   seconds, so scheduler deadlocks become visible instead of hanging forever.
-
-Suggested `make test` target
-----------------------------
-
-Add `make test` to run the fast deterministic integration cases. Keep
-worker-failure and large stress tests behind a separate `make stress` target if
-they are slower or more environment-sensitive.
+- Official handout: <https://cs162.org/static/hw/hw-map-reduce/>
+- Job submission: <https://cs162.org/static/hw/hw-map-reduce/docs/job-submission/>

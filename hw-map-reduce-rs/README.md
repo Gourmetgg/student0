@@ -1,177 +1,123 @@
-HW 5: MapReduce in Rust
-=======================
+# HW 5: MapReduce (Rust)
 
-Official reference:
+Official handout: <https://cs162.org/static/hw/hw-map-reduce-rs/>
 
-- <https://cs162.org/static/hw/hw-map-reduce-rs/>
-- <https://cs162.org/static/hw/hw-map-reduce-rs/docs/worker-registration/>
+## Introduction
 
-Assignment goals
-----------------
+This homework is the Rust counterpart to HW 5. You will build a MapReduce
+system with `tonic` (gRPC) and the Tokio async runtime: a coordinator
+service, worker services, a client CLI, and an autograder driver. The
+coordinator must accept job submissions, hand out map tasks before reduces,
+collect heartbeats, retry failed tasks, and report job completion or failure.
 
-This homework implements the CS 162 MapReduce system in Rust. It uses async
-Rust, generated protobuf types, a coordinator service, worker services, and a
-client. The official task set covers worker registration, job submission, task
-distribution, task completion, heartbeats, retries, and fault tolerance.
+Grading is split across three deadlines, just like the C version:
 
-Key implementation areas
-------------------------
+| Piece              | Weight | What you submit                            |
+| ------------------ | ------ | ------------------------------------------ |
+| gRPC Lab (lab-grpc-rs) | 5% | Working KV-store client/server.            |
+| Checkpoint         | 5%     | Up through the Tasks section of the spec.  |
+| Final              | 90%    | Full system with heartbeats and retries.   |
 
-- `proto/`: coordinator and worker protobuf definitions.
-- `src/coordinator/`: coordinator state, RPC methods, task queues, and retry
-  behavior.
-- `src/worker/`: worker registration, heartbeat, task execution, and reporting.
-- `src/bin/`: `mr-coordinator`, `mr-worker`, `mr-client`, and
-  `mr-autograder`.
-- `src/tests/mod.rs`: current draft integration test module.
-- `data/`: sample inputs.
+## Getting Started
 
-Build and run
--------------
+Rust development is much faster locally than inside the course Docker.
+Install Rust (via `rustup`) and CMake ≥ 3.20 first, then:
 
 ```sh
+cd ~/code/personal
+git pull staff main
 cd hw-map-reduce-rs
 cargo build
-cargo test
 ```
 
-Run the ignored draft word-count test after replacing its placeholder input:
+Layout:
+
+| Path                       | Role                                         |
+| -------------------------- | -------------------------------------------- |
+| `proto/`                   | Coordinator and worker protobuf definitions. |
+| `src/coordinator/`         | Coordinator service and task queues.         |
+| `src/worker/`              | Worker service: registration, heartbeats, exec. |
+| `src/client.rs`            | High-level helpers used by client and tests. |
+| `src/bin/mr-coordinator.rs` | Coordinator binary.                         |
+| `src/bin/mr-worker.rs`     | Worker binary.                               |
+| `src/bin/mr-client.rs`     | Client binary.                               |
+| `src/bin/mr-autograder.rs` | Autograder driver.                           |
+| `src/tests/mod.rs`         | Local cluster integration test (`#[ignore]`). |
+| `tests/smoke.rs`           | `cargo test --test smoke` smoke checks.      |
+| `data/`                    | Sample inputs.                               |
+
+Run a quick local cluster:
 
 ```sh
-cargo test test_wc -- --ignored
+cargo run --bin mr-coordinator &
+cargo run --bin mr-worker &
+cargo run --bin mr-client -- submit -a wc -o /tmp/mr-out -w data/gutenberg/p.txt
+cargo run --bin mr-client -- process -a wc -o /tmp/mr-out
 ```
 
-Manual service run in separate terminals:
+## Tasks
+
+### Worker Registration
+
+Workers must obtain a unique ID from the coordinator on startup and
+periodically send heartbeats. Persist enough state in the coordinator to
+match heartbeats to outstanding task assignments.
+
+### Job Submission
+
+Accept `submit` requests, validate the app name and reduce count, allocate
+a job ID, and return it. Reject submissions for unknown apps with a clear
+error.
+
+### Tasks
+
+Hand out map tasks before reduces. Reduce tasks become eligible only once
+**every** map for the job has completed. Per task, track `assigned`,
+`done`, and `failed` states.
+
+### Fault Tolerance (Final)
+
+A worker that misses heartbeats is treated as dead: its in-flight task is
+moved back to the pending queue. Tasks that fail more than `N` times mark
+the job as `failed` so the client can stop polling.
+
+## Testing
 
 ```sh
-cargo run --bin mr-coordinator
-cargo run --bin mr-worker
-cargo run --bin mr-client -- submit -a wc -o /tmp/hw-map-reduce-rs-out -w data/gutenberg/p.txt
-cargo run --bin mr-client -- process -a wc -o /tmp/hw-map-reduce-rs-out
+make test             # cargo test --test smoke (smoke suite only)
+cargo test            # also runs unit tests under src/
+cargo test test_wc -- --ignored   # local end-to-end (requires impl)
 ```
 
-Current test inventory
-----------------------
+The smoke suite proves that the crate compiles and the three CLI binaries
+launch — that is what the repo-level `run_all_tests.sh` runs. The integration
+test in `src/tests/mod.rs` boots a 4-worker cluster, submits a `wc` job, and
+compares the merged output; it stays `#[ignore]`'d so default `cargo test`
+does not run it until you have finished task execution.
 
-The repository currently has an ignored `test_wc` in `src/tests/mod.rs`, but
-the test still contains a placeholder input path. As a result, default
-`cargo test` does not validate a successful MapReduce job.
+## Submission
 
-Completeness assessment
------------------------
+Push `hw-map-reduce-rs/` to your personal repository. The checkpoint must be
+triggered manually from the autograder UI; the final submission runs from
+the standard CI flow. See the [Submission
+page](https://cs162.org/static/hw/hw-map-reduce-rs/docs/submission/) for the
+current deadlines.
 
-Coverage is incomplete. The Rust implementation needs both coordinator-state
-unit tests and async integration tests. The official assignment relies heavily
-on distributed state transitions, so the test suite should make those
-transitions explicit.
+## Self-check
 
-Missing coverage includes:
+Before submitting, take a stab at these. Full answers in
+[`STUDY.md`](STUDY.md).
 
-- Worker IDs are unique and start from the expected value.
-- Worker registration stores worker metadata correctly.
-- Job IDs are unique.
-- New jobs create all map and reduce tasks in the right initial state.
-- Task assignment respects map-before-reduce ordering.
-- Task completion updates job state.
-- Duplicate completion reports do not corrupt state.
-- Worker heartbeat timeout triggers retry.
-- End-to-end `wc`, `grep`, and `vertex_degree` outputs match golden files.
-- Failed workers and cancelled tasks do not hang the cluster.
+- Why prefer `tokio::sync::Mutex` over `std::sync::Mutex` for state held
+  across `.await`?
+- Why is `tokio::time::sleep` correct for the heartbeat loop but
+  `std::thread::sleep` is dangerous inside an `async fn`?
+- Why is `bincode` (or another binary format) the right choice for
+  intermediate map output instead of JSON?
+- What gives the coordinator its signal that a worker died, even before a
+  heartbeat misses?
 
-Detailed missing-test prompts
------------------------------
+## References
 
-1. Finish `src/tests/mod.rs::test_wc`:
-
-   - Replace `todo!("Pick an input file")` with a checked-in fixture or a
-     temporary file created inside the test.
-   - Submit a `wc` job through the client path.
-   - Wait for completion with a timeout.
-   - Process output.
-   - Sort or normalize output if reducer order is not deterministic.
-   - Assert the expected counts.
-
-   Example fixture:
-
-   ```text
-   alpha beta alpha
-   beta gamma
-   ```
-
-   Expected output: `alpha 2`, `beta 2`, `gamma 1`.
-
-2. Add worker-registration unit tests:
-
-   - Call the coordinator registration logic twice.
-   - Assert returned worker IDs are `0` and `1` if IDs start from zero.
-   - Assert both workers are present in coordinator state.
-   - Assert worker address or heartbeat metadata is stored.
-
-3. Add job-submission unit tests:
-
-   - Submit two jobs and assert job IDs are sequential.
-   - Assert input file lists, output directory, app name, app args, and reducer
-     count are copied into coordinator state.
-   - Assert every map task starts as not started.
-   - Assert reduce tasks are not assigned before map tasks finish.
-
-4. Add task-assignment tests:
-
-   - Register two workers.
-   - Submit a job with multiple input files.
-   - Request tasks from both workers.
-   - Assert they do not receive the same in-progress task unless retry logic has
-     intentionally made the task available again.
-
-5. Add task-completion tests:
-
-   - Mark a map task complete and assert its state changes.
-   - Complete all map tasks and assert reduce tasks become assignable.
-   - Complete all reduce tasks and assert the job reaches done state.
-   - Send a duplicate completion report and assert it is ignored safely.
-
-6. Add heartbeat and retry tests:
-
-   - Register a worker and assign it a task.
-   - Advance the coordinator's notion of time or wait past the heartbeat
-     timeout.
-   - Assert the task returns to the available queue.
-   - Assert another worker can receive and finish that task.
-
-7. Add integration tests using the existing cluster utilities:
-
-   - Start an in-process coordinator and multiple workers, for example with
-     `utils::start_cluster` if that helper is available.
-   - Use `#[tokio::test]`.
-   - Use `tokio::time::timeout` around the whole test.
-   - Submit `wc`, `grep`, and `vertex_degree` jobs using tiny deterministic
-     fixtures.
-
-8. Add invalid-input integration tests:
-
-   - Unknown app name.
-   - Missing input path.
-   - Output directory that cannot be created.
-   - Zero reducers if the API rejects that case.
-
-   Assert the client receives a clean error and the coordinator remains alive.
-
-9. Add output-cleanup checks:
-
-   - Use `tempfile::TempDir` for each test.
-   - Assert intermediate files are written where expected.
-   - Assert processed output is deterministic.
-   - Let `TempDir` remove generated files after the test.
-
-Suggested commands
-------------------
-
-```sh
-cargo test
-cargo test test_wc -- --ignored
-cargo test -- --nocapture
-```
-
-Keep deterministic state-machine tests active in the default `cargo test`
-suite. Keep slow fault-tolerance tests active if they are reliable; otherwise
-mark them ignored with a clear comment and run them in CI or before submission.
+- Official handout: <https://cs162.org/static/hw/hw-map-reduce-rs/>
+- Worker registration: <https://cs162.org/static/hw/hw-map-reduce-rs/docs/worker-registration/>
