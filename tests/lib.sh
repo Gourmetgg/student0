@@ -129,7 +129,8 @@ spawn() {
   SPAWN_LOG="$T_TMP/spawn-$_SPAWN_N.log"
   "$@" >"$SPAWN_LOG" 2>&1 &
   SPAWN_PID=$!
-  cleanup_add "kill $SPAWN_PID; wait $SPAWN_PID"
+  # TERM, give it a moment, then KILL — a bare `kill` can race process startup
+  cleanup_add "kill $SPAWN_PID; sleep 0.3; kill -9 $SPAWN_PID; wait $SPAWN_PID"
 }
 
 # wait_tcp HOST PORT [SECS] — poll until something accepts on HOST:PORT.
